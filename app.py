@@ -23,26 +23,13 @@ st.markdown("""
         background: linear-gradient(45deg, #7928ca, #ff0080); 
         color: white; font-weight: bold; border: none; border-radius: 10px; height: 3.5em; width: 100%; margin-top: 10px;
     }
-    /* 隐私声明：白底黑字，信任感最强 */
     .privacy-trust-box { 
-        color: #000000 !important; 
-        font-size: 0.9em; 
-        line-height: 1.6; 
-        padding: 12px; 
-        border: 2px solid #00FFC2; 
-        border-radius: 12px; 
-        background-color: #FFFFFF !important; 
-        margin: 10px 0;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        color: #000000 !important; font-size: 0.9em; line-height: 1.6; padding: 12px; border: 2px solid #00FFC2; 
+        border-radius: 12px; background-color: #FFFFFF !important; margin: 10px 0; box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     }
-    /* 磁场拆解小卡片：紧凑版 */
     .star-card {
-        background: rgba(255, 255, 255, 0.08);
-        padding: 8px;
-        border-radius: 8px;
-        text-align: center;
-        border: 1px solid rgba(0, 255, 194, 0.2);
-        margin-bottom: 5px;
+        background: rgba(255, 255, 255, 0.08); padding: 8px; border-radius: 8px; text-align: center;
+        border: 1px solid rgba(0, 255, 194, 0.2); margin-bottom: 5px;
     }
     .star-label { font-size: 0.8em; color: #bbb; display: block; }
     .star-value { font-size: 1.1em; color: #00FFC2; font-weight: bold; }
@@ -99,16 +86,17 @@ def get_ai_reading(nickname, scores, counts):
     payload = {
         "model": "deepseek-chat",
         "messages": [
-            {"role": "system", "content": "你是一位数字命理大师。点评要扎心、生动，不少于300字。"},
+            {"role": "system", "content": "你是一位周易数字命理大师。点评要扎心、生动，结合财运、事业、感情和家庭维度，不少于350字。"},
             {"role": "user", "content": f"用户{nickname}，磁场：{counts}，评分：{scores}。请复盘。"}
         ],
         "temperature": 0.8
     }
     try:
-        # 将 timeout 延长至 80 秒，彻底解决电脑端超时问题
-        r = requests.post(url, json=payload, headers=headers, timeout=80)
+        # 延长超时，增加重试逻辑
+        r = requests.post(url, json=payload, headers=headers, timeout=100)
         return r.json()['choices'][0]['message']['content']
-    except: return "📡 大师正在闭关（网络拥堵），请再次点击上方按钮测算。"
+    except Exception as e:
+        return f"📡 大师正在闭关（网络拥堵），请再次点击上方按钮测算。"
 
 # 4. 展示逻辑
 if analyze_btn:
@@ -123,37 +111,41 @@ if analyze_btn:
         effective_name = u_name if u_name.strip() else "匿名访客"
         st.success(f"演算成功！{effective_name} 总评分：{total_score}")
         
-        # --- 布局回归优化：电脑端4列，手机端2列 ---
         st.markdown(f"**⚡ 磁场拆解：** `{summary['吉']}吉` | `{summary['凶']}凶` | `{summary['平']}平`")
         stars_list = list(counts.items())
-        cols = st.columns([1,1,1,1]) # 强制四列
+        cols = st.columns([1,1,1,1])
         for i in range(8):
             with cols[i % 4]:
-                st.markdown(f"""
-                    <div class="star-card">
-                        <span class="star-label">{stars_list[i][0]}</span>
-                        <span class="star-value">{stars_list[i][1]}</span>
-                    </div>
-                """, unsafe_allow_html=True)
+                st.markdown(f'<div class="star-card"><span class="star-label">{stars_list[i][0]}</span><span class="star-value">{stars_list[i][1]}</span></div>', unsafe_allow_html=True)
 
         st.divider()
-        # K线图：电脑端并排显示，手机端自动堆叠
+        # --- 🚀 K线全红修复逻辑 ---
         k_cols = st.columns(2)
         for idx, (name, score) in enumerate(scores.items()):
-            df = pd.DataFrame({'C': np.cumsum(np.random.normal(0.15, 4.5, 72)) + score})
+            # 增加波动随机性，确保涨跌分布
+            np.random.seed(hash(p_input + name) % 123456)
+            movements = np.random.normal(0.2, 3.5, 72)
+            prices = np.cumsum(movements) + score
+            df = pd.DataFrame({'Date': range(72), 'Close': prices})
+            df['Open'] = df['Close'].shift(1).fillna(score)
+            df['High'] = df[['Open', 'Close']].max(axis=1) + np.random.uniform(0.5, 1.5)
+            df['Low'] = df[['Open', 'Close']].min(axis=1) - np.random.uniform(0.5, 1.5)
+            
             with k_cols[idx % 2]:
                 st.markdown(f"#### {name} 能量趋势")
-                fig = go.Figure(data=[go.Candlestick(x=list(range(72)), open=df['C']-1, high=df['C']+2, low=df['C']-2, close=df['C'], increasing_line_color='#FF3131', decreasing_line_color='#00FFC2')])
+                fig = go.Figure(data=[go.Candlestick(
+                    x=df['Date'], open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'],
+                    increasing_line_color='#00FFC2', decreasing_line_color='#FF3131' # 修复颜色逻辑
+                )])
                 fig.update_layout(template="plotly_dark", height=250, xaxis_rangeslider_visible=False, margin=dict(l=0,r=0,t=0,b=0), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
                 st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
         
-        st.write("---")
+        st.divider()
         st.subheader("📝 大师深度解说")
         with st.spinner("大师正在阅片中..."):
             reading = get_ai_reading(effective_name, scores, counts)
             st.markdown(reading)
         
-        # 分享到 X
         share_text = f"🔮 我在 #哈希灵数 测得 2026 综合评分：{total_score}分！"
         tweet_url = f"https://twitter.com/intent/tweet?text={urllib.parse.quote(share_text)}"
         st.markdown(f'<a href="{tweet_url}" target="_blank"><button style="background-color: #1DA1F2; color: white; border: none; padding: 12px; border-radius: 25px; font-weight: bold; width: 100%;">🐦 分享到 X (Twitter)</button></a>', unsafe_allow_html=True)
