@@ -8,7 +8,7 @@ import urllib.parse
 import streamlit.components.v1 as components
 
 # ==========================================
-# 🔑 核心配置：从 Secrets 读取 Key
+# 🔑 核心配置
 # ==========================================
 DEEPSEEK_API_KEY = st.secrets.get("sk-899d54012ab145588d06927811ff8562")
 
@@ -37,7 +37,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# 🚀 手机端自动全选补丁
+# 🚀 交互补丁
 components.html("""<script>const m=()=>{const ins=window.parent.document.querySelectorAll('input[type="text"]');ins.forEach(i=>{if(!i.dataset.l){i.addEventListener('focus',()=>i.select());i.dataset.l='t';}});};setInterval(m, 1000);</script>""", height=0)
 
 st.title("🔮 哈希灵数 HashNumina")
@@ -86,17 +86,16 @@ def get_ai_reading(nickname, scores, counts):
     payload = {
         "model": "deepseek-chat",
         "messages": [
-            {"role": "system", "content": "你是一位周易数字命理大师。点评要扎心、生动，结合财运、事业、感情和家庭维度，不少于350字。"},
+            {"role": "system", "content": "你是一位周易数字命理大师。点评要扎心、生动，不少于350字。"},
             {"role": "user", "content": f"用户{nickname}，磁场：{counts}，评分：{scores}。请复盘。"}
         ],
         "temperature": 0.8
     }
     try:
-        # 延长超时，增加重试逻辑
-        r = requests.post(url, json=payload, headers=headers, timeout=100)
+        r = requests.post(url, json=payload, headers=headers, timeout=120)
         return r.json()['choices'][0]['message']['content']
-    except Exception as e:
-        return f"📡 大师正在闭关（网络拥堵），请再次点击上方按钮测算。"
+    except Exception:
+        return "📡 大师正在闭关（网络拥堵），请再次点击上方按钮测算。"
 
 # 4. 展示逻辑
 if analyze_btn:
@@ -108,8 +107,9 @@ if analyze_btn:
             st.write("同步 AI 命理接口中...")
             status.update(label="✅ 演算完成", state="complete", expanded=False)
         
-        effective_name = u_name if u_name.strip() else "匿名访客"
-        st.success(f"演算成功！{effective_name} 总评分：{total_score}")
+        # --- 修改点：优化结果抬头格式 ---
+        effective_name = u_name if u_name.strip() else "访客"
+        st.success(f"演算成功，{effective_name}阁下您的手机号码能量分：{total_score} 分")
         
         st.markdown(f"**⚡ 磁场拆解：** `{summary['吉']}吉` | `{summary['凶']}凶` | `{summary['平']}平`")
         stars_list = list(counts.items())
@@ -119,23 +119,22 @@ if analyze_btn:
                 st.markdown(f'<div class="star-card"><span class="star-label">{stars_list[i][0]}</span><span class="star-value">{stars_list[i][1]}</span></div>', unsafe_allow_html=True)
 
         st.divider()
-        # --- 🚀 K线全红修复逻辑 ---
+        # --- K线配色修复 ---
         k_cols = st.columns(2)
         for idx, (name, score) in enumerate(scores.items()):
-            # 增加波动随机性，确保涨跌分布
-            np.random.seed(hash(p_input + name) % 123456)
-            movements = np.random.normal(0.2, 3.5, 72)
+            np.random.seed(hash(p_input + name) % 1234567)
+            movements = np.random.normal(0.25, 4.0, 72)
             prices = np.cumsum(movements) + score
             df = pd.DataFrame({'Date': range(72), 'Close': prices})
             df['Open'] = df['Close'].shift(1).fillna(score)
-            df['High'] = df[['Open', 'Close']].max(axis=1) + np.random.uniform(0.5, 1.5)
-            df['Low'] = df[['Open', 'Close']].min(axis=1) - np.random.uniform(0.5, 1.5)
+            df['High'] = df[['Open', 'Close']].max(axis=1) + 1.2
+            df['Low'] = df[['Open', 'Close']].min(axis=1) - 1.2
             
             with k_cols[idx % 2]:
                 st.markdown(f"#### {name} 能量趋势")
                 fig = go.Figure(data=[go.Candlestick(
                     x=df['Date'], open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'],
-                    increasing_line_color='#00FFC2', decreasing_line_color='#FF3131' # 修复颜色逻辑
+                    increasing_line_color='#00FFC2', decreasing_line_color='#FF3131' 
                 )])
                 fig.update_layout(template="plotly_dark", height=250, xaxis_rangeslider_visible=False, margin=dict(l=0,r=0,t=0,b=0), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
                 st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
