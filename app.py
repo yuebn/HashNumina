@@ -12,7 +12,7 @@ import streamlit.components.v1 as components
 # ==========================================
 DEEPSEEK_API_KEY = st.secrets.get("sk-899d54012ab145588d06927811ff8562")
 
-# 1. 页面配置与视觉优化
+# 1. 页面配置与极简 CSS
 st.set_page_config(page_title="哈希灵数 HashNumina", layout="wide")
 
 st.markdown("""
@@ -25,19 +25,22 @@ st.markdown("""
     }
     .privacy-trust-box { 
         color: #000000 !important; font-size: 0.9em; line-height: 1.6; padding: 12px; border: 2px solid #00FFC2; 
-        border-radius: 12px; background-color: #FFFFFF !important; margin: 10px 0; box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        border-radius: 12px; background-color: #FFFFFF !important; margin: 10px 0;
     }
-    .star-card {
-        background: rgba(255, 255, 255, 0.08); padding: 8px; border-radius: 8px; text-align: center;
-        border: 1px solid rgba(0, 255, 194, 0.2); margin-bottom: 5px;
+    /* 🚀 极致紧凑：无框矩阵布局 */
+    .star-cell {
+        text-align: center;
+        padding: 5px 0;
+        margin-bottom: 2px;
+        background: transparent;
     }
-    .star-label { font-size: 0.8em; color: #bbb; display: block; }
-    .star-value { font-size: 1.1em; color: #00FFC2; font-weight: bold; }
+    .star-label { font-size: 0.7em; color: #bbb; display: block; }
+    .star-value { font-size: 1.05em; color: #00FFC2; font-weight: bold; display: block; }
     .footer { text-align: center; padding: 30px 10px; color: #888; font-size: 0.8em; }
     </style>
     """, unsafe_allow_html=True)
 
-# 🚀 交互补丁
+# 🚀 自动全选补丁
 components.html("""<script>const m=()=>{const ins=window.parent.document.querySelectorAll('input[type="text"]');ins.forEach(i=>{if(!i.dataset.l){i.addEventListener('focus',()=>i.select());i.dataset.l='t';}});};setInterval(m, 1000);</script>""", height=0)
 
 st.title("🔮 哈希灵数 HashNumina")
@@ -84,18 +87,15 @@ def get_ai_reading(nickname, scores, counts):
     url = "https://api.deepseek.com/chat/completions"
     headers = {"Content-Type": "application/json", "Authorization": f"Bearer {DEEPSEEK_API_KEY}"}
     payload = {
-        "model": "deepseek-chat",
-        "messages": [
-            {"role": "system", "content": "你是一位周易数字命理大师。点评要扎心、生动，不少于350字。"},
+        "model": "deepseek-chat", "messages": [
+            {"role": "system", "content": "你是一位周易命理大师。点评扎心、生动，不少于350字。"},
             {"role": "user", "content": f"用户{nickname}，磁场：{counts}，评分：{scores}。请复盘。"}
-        ],
-        "temperature": 0.8
+        ], "temperature": 0.8
     }
     try:
         r = requests.post(url, json=payload, headers=headers, timeout=120)
         return r.json()['choices'][0]['message']['content']
-    except Exception:
-        return "📡 大师正在闭关（网络拥堵），请再次点击上方按钮测算。"
+    except: return "📡 网络繁忙，请重新点击按钮测算。"
 
 # 4. 展示逻辑
 if analyze_btn:
@@ -104,40 +104,38 @@ if analyze_btn:
     else:
         with st.status("🔮 正在读取哈希磁场...", expanded=True) as status:
             scores, counts, summary, total_score = analyze_numerology(p_input)
-            st.write("同步 AI 命理接口中...")
             status.update(label="✅ 演算完成", state="complete", expanded=False)
         
-        # --- 修改点：优化结果抬头格式 ---
         effective_name = u_name if u_name.strip() else "访客"
         st.success(f"演算成功，{effective_name}阁下您的手机号码能量分：{total_score} 分")
         
-        st.markdown(f"**⚡ 磁场拆解：** `{summary['吉']}吉` | `{summary['凶']}凶` | `{summary['平']}平`")
+        # --- 🚀 磁场解盘：全端强制 1行4个，去框化 ---
+        st.markdown(f"**⚡ 磁场解盘：** `{summary['吉']}吉` | `{summary['凶']}凶` | `{summary['平']}平`")
         stars_list = list(counts.items())
-        cols = st.columns([1,1,1,1])
-        for i in range(8):
-            with cols[i % 4]:
-                st.markdown(f'<div class="star-card"><span class="star-label">{stars_list[i][0]}</span><span class="star-value">{stars_list[i][1]}</span></div>', unsafe_allow_html=True)
+        
+        # 即使在手机端也强制生成 4 列
+        row1 = st.columns(4)
+        for i in range(4):
+            with row1[i]:
+                st.markdown(f'<div class="star-cell"><span class="star-label">{stars_list[i][0]}</span><span class="star-value">{stars_list[i][1]}</span></div>', unsafe_allow_html=True)
+        
+        row2 = st.columns(4)
+        for i in range(4, 8):
+            with row2[i-4]:
+                st.markdown(f'<div class="star-cell"><span class="star-label">{stars_list[i][0]}</span><span class="star-value">{stars_list[i][1]}</span></div>', unsafe_allow_html=True)
 
         st.divider()
-        # --- K线配色修复 ---
+        # K线堆叠展示
         k_cols = st.columns(2)
         for idx, (name, score) in enumerate(scores.items()):
-            np.random.seed(hash(p_input + name) % 1234567)
-            movements = np.random.normal(0.25, 4.0, 72)
-            prices = np.cumsum(movements) + score
-            df = pd.DataFrame({'Date': range(72), 'Close': prices})
-            df['Open'] = df['Close'].shift(1).fillna(score)
-            df['High'] = df[['Open', 'Close']].max(axis=1) + 1.2
-            df['Low'] = df[['Open', 'Close']].min(axis=1) - 1.2
-            
+            np.random.seed(hash(p_input + name) % 1000000)
+            df = pd.DataFrame({'C': np.cumsum(np.random.normal(0.2, 4.0, 72)) + score})
+            df['O'] = df['C'].shift(1).fillna(score)
             with k_cols[idx % 2]:
                 st.markdown(f"#### {name} 能量趋势")
-                fig = go.Figure(data=[go.Candlestick(
-                    x=df['Date'], open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'],
-                    increasing_line_color='#00FFC2', decreasing_line_color='#FF3131' 
-                )])
-                fig.update_layout(template="plotly_dark", height=250, xaxis_rangeslider_visible=False, margin=dict(l=0,r=0,t=0,b=0), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
-                st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+                fig = go.Figure(data=[go.Candlestick(x=list(range(72)), open=df['O'], high=df['O']+2, low=df['O']-2, close=df['C'], increasing_line_color='#00FFC2', decreasing_line_color='#FF3131')])
+                fig.update_layout(template="plotly_dark", height=230, xaxis_rangeslider_visible=False, margin=dict(l=0,r=0,t=0,b=0), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+                st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False, 'responsive': True})
         
         st.divider()
         st.subheader("📝 大师深度解说")
@@ -146,7 +144,6 @@ if analyze_btn:
             st.markdown(reading)
         
         share_text = f"🔮 我在 #哈希灵数 测得 2026 综合评分：{total_score}分！"
-        tweet_url = f"https://twitter.com/intent/tweet?text={urllib.parse.quote(share_text)}"
-        st.markdown(f'<a href="{tweet_url}" target="_blank"><button style="background-color: #1DA1F2; color: white; border: none; padding: 12px; border-radius: 25px; font-weight: bold; width: 100%;">🐦 分享到 X (Twitter)</button></a>', unsafe_allow_html=True)
+        st.markdown(f'<a href="https://twitter.com/intent/tweet?text={urllib.parse.quote(share_text)}" target="_blank"><button style="background-color: #1DA1F2; color: white; border: none; padding: 12px; border-radius: 25px; font-weight: bold; width: 100%;">🐦 分享到 X (Twitter)</button></a>', unsafe_allow_html=True)
 
 st.markdown(f'<div class="footer"><hr>© 2026 HashNumina | <a href="https://x.com/btc1349" style="color:#00FFC2;text-decoration:none;">@btc1349</a></div>', unsafe_allow_html=True)
