@@ -10,9 +10,9 @@ import streamlit.components.v1 as components
 # ==========================================
 # 🔑 核心配置
 # ==========================================
-DEEPSEEK_API_KEY = st.secrets.get("sk-899d54012ab145588d06927811ff8562")
+DEEPSEEK_API_KEY = "sk-899d54012ab145588d06927811ff8562"
 
-# 1. 页面配置与极简 CSS
+# 1. 页面配置与极简 CSS 注入
 st.set_page_config(page_title="哈希灵数 HashNumina", layout="wide")
 
 st.markdown("""
@@ -27,12 +27,19 @@ st.markdown("""
         color: #000000 !important; font-size: 0.9em; line-height: 1.6; padding: 12px; border: 2px solid #00FFC2; 
         border-radius: 12px; background-color: #FFFFFF !important; margin: 10px 0;
     }
-    /* 🚀 极致紧凑：无框矩阵布局 */
-    .star-cell {
-        text-align: center;
+    /* 🚀 核心布局补丁：左对齐、极致紧凑 */
+    .star-grid {
+        display: flex;
+        flex-wrap: wrap;
+        max-width: 400px; /* 进一步缩小宽度，确保 8 组数据聚拢在左侧 */
+        margin-left: 0;   /* 强制左对齐 */
+        justify-content: flex-start;
+    }
+    .star-item {
+        flex: 0 0 25%;   /* 强制 1 行 4 个 */
+        text-align: left; /* 文字左对齐，增加呼吸感 */
         padding: 5px 0;
         margin-bottom: 2px;
-        background: transparent;
     }
     .star-label { font-size: 0.7em; color: #bbb; display: block; }
     .star-value { font-size: 1.05em; color: #00FFC2; font-weight: bold; display: block; }
@@ -40,25 +47,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# 🚀 自动全选补丁
-components.html("""<script>const m=()=>{const ins=window.parent.document.querySelectorAll('input[type="text"]');ins.forEach(i=>{if(!i.dataset.l){i.addEventListener('focus',()=>i.select());i.dataset.l='t';}});};setInterval(m, 1000);</script>""", height=0)
-
-st.title("🔮 哈希灵数 HashNumina")
-st.caption("周易八星磁场扫描 + DeepSeek-V3 深度解说")
-
-st.markdown("""
-    <div class="privacy-trust-box">
-        <b style="color:#000000;">🛡️ 隐私保护声明：</b><br>
-        本站不存储任何输入信息，数据仅用于实时演算，请放心使用。
-    </div>
-""", unsafe_allow_html=True)
-
-# 2. 输入区域
-u_name = st.text_input("👤 您的昵称", placeholder="访客模式可留空")
-p_input = st.text_input("📱 手机号码", placeholder="输入11位待测号码")
-analyze_btn = st.button("🚀 开始哈希演算")
-
-# 3. 核心算法
+# 2. 核心算法
 def analyze_numerology(phone):
     stars_cfg = {
         "天医(财)": ["13", "31", "68", "86", "49", "94", "27", "72"],
@@ -95,34 +84,33 @@ def get_ai_reading(nickname, scores, counts):
     try:
         r = requests.post(url, json=payload, headers=headers, timeout=120)
         return r.json()['choices'][0]['message']['content']
-    except: return "📡 网络繁忙，请重新点击按钮测算。"
+    except: return "📡 大师正在闭关，请再次点击按钮测算。"
 
-# 4. 展示逻辑
+# 3. 页面展示
+st.title("🔮 哈希灵数 HashNumina")
+st.markdown("""<div class="privacy-trust-box">🛡️ <b>隐私保护声明：</b><br>数据仅用于实时演算，演算完毕即刻销毁，请放心使用。</div>""", unsafe_allow_html=True)
+
+u_name = st.text_input("👤 您的昵称", placeholder="访客模式可留空")
+p_input = st.text_input("📱 手机号码", placeholder="输入11位待测号码")
+analyze_btn = st.button("🚀 开始哈希演算")
+
 if analyze_btn:
     if len(p_input) < 11:
         st.warning("请输入完整的 11 位手机号")
     else:
-        with st.status("🔮 正在读取哈希磁场...", expanded=True) as status:
-            scores, counts, summary, total_score = analyze_numerology(p_input)
-            status.update(label="✅ 演算完成", state="complete", expanded=False)
-        
+        scores, counts, summary, total_score = analyze_numerology(p_input)
         effective_name = u_name if u_name.strip() else "访客"
+        
         st.success(f"演算成功，{effective_name}阁下您的手机号码能量分：{total_score} 分")
         
-        # --- 🚀 磁场解盘：全端强制 1行4个，去框化 ---
+        # --- 🚀 磁场解盘：全端左对齐，强制 1行4个 ---
         st.markdown(f"**⚡ 磁场解盘：** `{summary['吉']}吉` | `{summary['凶']}凶` | `{summary['平']}平`")
-        stars_list = list(counts.items())
         
-        # 即使在手机端也强制生成 4 列
-        row1 = st.columns(4)
-        for i in range(4):
-            with row1[i]:
-                st.markdown(f'<div class="star-cell"><span class="star-label">{stars_list[i][0]}</span><span class="star-value">{stars_list[i][1]}</span></div>', unsafe_allow_html=True)
-        
-        row2 = st.columns(4)
-        for i in range(4, 8):
-            with row2[i-4]:
-                st.markdown(f'<div class="star-cell"><span class="star-label">{stars_list[i][0]}</span><span class="star-value">{stars_list[i][1]}</span></div>', unsafe_allow_html=True)
+        star_html = '<div class="star-grid">'
+        for label, val in counts.items():
+            star_html += f'<div class="star-item"><span class="star-label">{label}</span><span class="star-value">{val}</span></div>'
+        star_html += '</div>'
+        st.markdown(star_html, unsafe_allow_html=True)
 
         st.divider()
         # K线堆叠展示
@@ -135,7 +123,7 @@ if analyze_btn:
                 st.markdown(f"#### {name} 能量趋势")
                 fig = go.Figure(data=[go.Candlestick(x=list(range(72)), open=df['O'], high=df['O']+2, low=df['O']-2, close=df['C'], increasing_line_color='#00FFC2', decreasing_line_color='#FF3131')])
                 fig.update_layout(template="plotly_dark", height=230, xaxis_rangeslider_visible=False, margin=dict(l=0,r=0,t=0,b=0), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
-                st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False, 'responsive': True})
+                st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False, 'responsive': True, 'displaylogo': False})
         
         st.divider()
         st.subheader("📝 大师深度解说")
