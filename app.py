@@ -10,7 +10,7 @@ import streamlit.components.v1 as components
 # ==========================================
 # 🔑 核心配置：填入你的 DeepSeek API Key
 # ==========================================
-DEEPSEEK_API_KEY = "这里替换为你的sk-开头的Key"
+DEEPSEEK_API_KEY = "sk-899d54012ab145588d06927811ff8562"
 
 # 1. 页面配置与全端自适应 CSS 注入
 st.set_page_config(page_title="哈希灵数 HashNumina", layout="wide")
@@ -149,3 +149,4 @@ st.markdown(f"""
         开发者 X: <a href="https://x.com/btc1349" style="color: #00FFC2; text-decoration: none;">@btc1349</a>
     </div>
     """, unsafe_allow_html=True)
+
