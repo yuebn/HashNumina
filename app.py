@@ -17,30 +17,39 @@ if 'rate_limit' not in st.session_state:
     st.session_state['rate_limit'] = {}
 
 # 1. 页面配置与视觉注入
-st.set_page_config(page_title="多比 duobi", layout="wide")
+st.set_page_config(page_title="多比 DuoBi", layout="wide")
 
-# 🎨 注入静态 LOGO 与精致样式（去除动画）
+# 🎨 注入自定义 LOGO 与精致样式
 st.markdown("""
     <style>
     .main { background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); color: #E0E0E0; }
     
-    /* 静态 LOGO 区域 */
-    .logo-container {
+    /* LOGO 和标题的容器 */
+    .header-container {
         display: flex;
         align-items: center;
-        margin-bottom: 20px;
+        gap: 15px; /* LOGO 和文字之间的间距 */
+        margin-bottom: 5px;
         padding-top: 10px;
     }
-    .logo-text {
+    .main-title {
         font-family: 'Inter', 'Helvetica Neue', sans-serif;
         font-weight: 800;
         font-size: 2.2rem;
-        margin-left: 12px;
-        color: #FFFFFF;
-        letter-spacing: -1px;
+        color: #FFFFFF; /* 白色 */
+        line-height: 1.1; /* 调整行高使标题更紧凑 */
+        margin: 0;
     }
-    .logo-icon-svg {
-        filter: drop-shadow(0 0 5px rgba(0, 255, 194, 0.3));
+    .subtitle {
+        font-family: 'Inter', 'Helvetica Neue', sans-serif;
+        font-weight: 500;
+        font-size: 1.2rem;
+        color: #FFD700; /* 金色，与魔法棒光效呼应 */
+        margin-top: -5px; /* 向上微调，与主标题更靠近 */
+    }
+    .stImage {
+        border-radius: 15px; /* 圆角图片 */
+        overflow: hidden; /* 确保圆角生效 */
     }
 
     /* 紧凑 UI 组件 */
@@ -62,19 +71,19 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# 🚀 插入静态 SVG LOGO
-st.markdown("""
-    <div class="logo-container">
-        <svg class="logo-icon-svg" width="45" height="45" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="100" height="100" rx="15" fill="#1a1a1a" />
-            <path d="M25 65L40 50L55 60L75 35" stroke="#00FFC2" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
-            <circle cx="75" cy="35" r="5" fill="#FF3131" />
-        </svg>
-        <span class="logo-text">多比 duobi</span>
-    </div>
-""", unsafe_allow_html=True)
+# 🚀 手机 K 线脚本补丁（保持不动）
+components.html('<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>', height=0)
 
-st.caption("周易八星磁场扫描 + DeepSeek-V3 深度解说")
+# 嵌入 LOGO 图片和品牌名称
+col1, col2 = st.columns([0.15, 0.85]) # 调整列宽比例以适应图片和文字
+
+with col1:
+    st.image("https://i.ibb.co/L9H3w99/Dobby-Logo-Final.png", width=100) # 使用CDN链接
+
+with col2:
+    st.markdown("<div class='header-container'><h1 class='main-title'>多比 DuoBi</h1></div>", unsafe_allow_html=True)
+    st.markdown("<p class='subtitle'>周易八星磁场扫描 + DeepSeek-V3 深度解说</p>", unsafe_allow_html=True)
+
 
 # 🛡️ 隐私保护声明（白底黑字保持不动）
 st.markdown("""
@@ -199,7 +208,7 @@ if analyze_btn:
             reading = get_ai_reading(effective_name, scores, counts)
             st.markdown(reading)
         
-        share_text = f"🔮 我在 #多比duobi 测得 2026 综合评分：{total_score}分！"
+        share_text = f"🔮 我在 #多比DuoBi 测得 2026 综合评分：{total_score}分！"
         st.markdown(f'<a href="https://twitter.com/intent/tweet?text={urllib.parse.quote(share_text)}" target="_blank"><button style="background-color: #1DA1F2; color: white; border: none; padding: 12px; border-radius: 25px; font-weight: bold; width: 100%; max-width: 300px;">🐦 分享到 X (Twitter)</button></a>', unsafe_allow_html=True)
         
         st.write("") 
@@ -208,4 +217,4 @@ if analyze_btn:
             st.session_state["p_input_key"] = ""
             st.rerun()
 
-st.markdown(f'<div class="footer"><hr>© 2026 多比 duobi | <a href="https://x.com/btc1349" style="color:#00FFC2;text-decoration:none;">@btc1349</a></div>', unsafe_allow_html=True)
+st.markdown(f'<div class="footer"><hr>© 2026 多比 DuoBi | <a href="https://x.com/btc1349" style="color:#00FFC2;text-decoration:none;">@btc1349</a></div>', unsafe_allow_html=True)
