@@ -2,18 +2,17 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
-from datetime import datetime, timedelta
 import requests
 import urllib.parse
 import streamlit.components.v1 as components
 
 # ==========================================
-# 🔑 核心配置：从 Secrets 读取 Key
+# 🔑 核心配置：API Key
 # ==========================================
 DEEPSEEK_API_KEY = st.secrets.get("DEEPSEEK_API_KEY", "sk-899d54012ab145588d06927811ff8562")
 
 # 1. 页面配置与视觉注入
-st.set_page_config(page_title="哈希灵数 HashNumina", layout="wide")
+st.set_page_config(page_title="多比 duobi", layout="wide")
 
 st.markdown("""
     <style>
@@ -23,12 +22,10 @@ st.markdown("""
         background: linear-gradient(45deg, #7928ca, #ff0080); 
         color: white; font-weight: bold; border: none; border-radius: 10px; height: 3.5em; width: 100%; margin-top: 10px;
     }
-    /* 隐私声明：白底黑字方案 */
     .privacy-trust-box { 
         color: #000000 !important; font-size: 0.9em; line-height: 1.6; padding: 12px; border: 2px solid #00FFC2; 
         border-radius: 12px; background-color: #FFFFFF !important; margin: 10px 0;
     }
-    /* 左侧聚拢紧凑排版布局 */
     .star-grid {
         display: flex; flex-wrap: wrap; max-width: 420px; margin-left: 0; justify-content: flex-start;
     }
@@ -39,13 +36,13 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# 🚀 手机 K 线修复：强制注入 Plotly CDN 脚本补丁
+# 🚀 手机 K 线脚本补丁
 components.html('<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>', height=0)
 
-st.title("🔮 哈希灵数 HashNumina")
+st.title("🔮 多比 duobi")
 st.caption("周易八星磁场扫描 + DeepSeek-V3 深度解说")
 
-# --- 🛡️ 隐私文案严格还原（修改项1） ---
+# --- 🛡️ 隐私文案还原 ---
 st.markdown("""
     <div class="privacy-trust-box">
         <b style="color:#000000;">🛡️ 隐私保护声明：</b><br>
@@ -53,12 +50,7 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# 2. 输入区域
-u_name = st.text_input("👤 您的昵称", placeholder="访客模式可留空")
-p_input = st.text_input("📱 手机号码", placeholder="输入11位待测号码")
-analyze_btn = st.button("🚀 开始哈希演算")
-
-# 3. 核心算法
+# 2. 核心算法逻辑保持不动
 def analyze_numerology(phone):
     stars_cfg = {
         "天医(财)": ["13", "31", "68", "86", "49", "94", "27", "72"],
@@ -93,11 +85,16 @@ def get_ai_reading(nickname, scores, counts):
         ], "temperature": 0.8
     }
     try:
+        # 保持解说超时加固
         r = requests.post(url, json=payload, headers=headers, timeout=120)
         return r.json()['choices'][0]['message']['content']
     except: return "📡 大师正在闭关（网络拥堵），请点击按钮重新演算。"
 
-# 4. 展示逻辑
+# 3. 响应逻辑
+u_name = st.text_input("👤 您的昵称", placeholder="访客模式可留空")
+p_input = st.text_input("📱 手机号码", placeholder="输入11位待测号码")
+analyze_btn = st.button("🚀 开始哈希演算")
+
 if analyze_btn:
     if len(p_input) < 11:
         st.warning("请输入完整的 11 位手机号")
@@ -109,7 +106,7 @@ if analyze_btn:
         effective_name = u_name if u_name.strip() else "访客"
         st.success(f"演算成功，{effective_name}阁下您的手机号码能量分：{total_score} 分")
         
-        # --- ⚡ 磁场解盘排版布局保持不变 ---
+        # --- ⚡ 磁场解盘：布局保持不动 ---
         st.markdown(f"**⚡ 磁场解盘：** `{summary['吉']}吉` | `{summary['凶']}凶` | `{summary['平']}平`")
         star_html = '<div class="star-grid">'
         for label, val in counts.items():
@@ -118,17 +115,47 @@ if analyze_btn:
         st.markdown(star_html, unsafe_allow_html=True)
 
         st.divider()
-        # --- 🚀 K 线图适配修复：红绿配色 + 静态模式（修改项2） ---
+        # --- 🚀 理数干支 K 线引擎 (参考 lifekline.ai) ---
+        st.markdown("### 📊 项目月线运势 K 线图 (理数预测)")
+        ganzhi_months = ["庚子", "辛丑", "壬寅", "癸卯", "甲辰", "乙巳", "丙午", "丁未", "戊申", "己酉", "庚戌", "辛亥"]
+        
         k_cols = st.columns(2)
         for idx, (name, score) in enumerate(scores.items()):
             np.random.seed(hash(p_input + name) % 1000000)
-            df = pd.DataFrame({'C': np.cumsum(np.random.normal(0.2, 4.2, 72)) + score})
-            df['O'] = df['C'].shift(1).fillna(score)
+            
+            # 模仿专业数据生成逻辑
+            steps = 12
+            noise = np.random.normal(0, 3.5, steps)
+            trend = np.linspace(0, 10, steps) * (1 if score > 65 else -0.5)
+            c_prices = np.cumsum(noise) + trend + score
+            
+            df = pd.DataFrame({
+                'Month': ganzhi_months,
+                'Close': c_prices,
+                'Open': np.roll(c_prices, 1)
+            })
+            df.loc[0, 'Open'] = score - np.random.uniform(1, 3)
+            df['High'] = df[['Open', 'Close']].max(axis=1) + np.random.uniform(0.5, 2.5, steps)
+            df['Low'] = df[['Open', 'Close']].min(axis=1) - np.random.uniform(0.5, 2.5, steps)
+            
+            # 计算涨跌色
+            df['Color'] = np.where(df['Close'] >= df['Open'], '#00FFC2', '#FF3131')
+            df['Text'] = df.apply(lambda x: f"{x['Month']}月: {'涨 ▲' if x['Close']>=x['Open'] else '跌 ▼'}<br>开盘: {x['Open']:.1f}<br>收盘: {x['Close']:.1f}", axis=1)
+
             with k_cols[idx % 2]:
-                st.markdown(f"#### {name} 能量趋势")
-                fig = go.Figure(data=[go.Candlestick(x=list(range(72)), open=df['O'], high=df['O']+2, low=df['O']-2, close=df['C'], increasing_line_color='#00FFC2', decreasing_line_color='#FF3131')])
-                fig.update_layout(template="plotly_dark", height=230, xaxis_rangeslider_visible=False, margin=dict(l=0,r=0,t=0,b=0), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
-                st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False, 'staticPlot': False, 'responsive': True})
+                st.markdown(f"#### {name} 维度运势")
+                fig = go.Figure(data=[go.Candlestick(
+                    x=df['Month'], open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'],
+                    increasing_line_color='#00FFC2', decreasing_line_color='#FF3131',
+                    text=df['Text'], hoverinfo='text' # 增加悬浮详情
+                )])
+                fig.update_layout(
+                    template="plotly_dark", height=300, xaxis_rangeslider_visible=False,
+                    margin=dict(l=0,r=0,t=10,b=10), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
+                    xaxis=dict(showgrid=True, gridcolor='rgba(255,255,255,0.05)', tickangle=0),
+                    yaxis=dict(showgrid=True, gridcolor='rgba(255,255,255,0.05)', side='right', title="运势分")
+                )
+                st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False, 'responsive': True})
         
         st.write("---")
         st.subheader("📝 大师深度解说")
@@ -136,7 +163,7 @@ if analyze_btn:
             reading = get_ai_reading(effective_name, scores, counts)
             st.markdown(reading)
         
-        share_text = f"🔮 我在 #哈希灵数 测得 2026 综合评分：{total_score}分！"
+        share_text = f"🔮 我在 #多比duobi 测得 2026 综合评分：{total_score}分！"
         st.markdown(f'<a href="https://twitter.com/intent/tweet?text={urllib.parse.quote(share_text)}" target="_blank"><button style="background-color: #1DA1F2; color: white; border: none; padding: 12px; border-radius: 25px; font-weight: bold; width: 100%;">🐦 分享到 X (Twitter)</button></a>', unsafe_allow_html=True)
 
-st.markdown(f'<div class="footer"><hr>© 2026 HashNumina | <a href="https://x.com/btc1349" style="color:#00FFC2;text-decoration:none;">@btc1349</a></div>', unsafe_allow_html=True)
+st.markdown(f'<div class="footer"><hr>© 2026 多比 duobi | <a href="https://x.com/btc1349" style="color:#00FFC2;text-decoration:none;">@btc1349</a></div>', unsafe_allow_html=True)
