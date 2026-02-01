@@ -11,19 +11,39 @@ import streamlit.components.v1 as components
 # 🔑 核心配置与安全策略
 # ==========================================
 DEEPSEEK_API_KEY = st.secrets.get("DEEPSEEK_API_KEY", "sk-899d54012ab145588d06927811ff8562")
-# 隐藏测试白名单号码逻辑
 TEST_WHITELIST_STUB = "18923487413" 
 
-# 初始化频率限制缓存 (4小时有效期)
 if 'rate_limit' not in st.session_state:
     st.session_state['rate_limit'] = {}
 
 # 1. 页面配置与视觉注入
 st.set_page_config(page_title="多比 duobi", layout="wide")
 
+# 🎨 注入静态 LOGO 与精致样式（去除动画）
 st.markdown("""
     <style>
     .main { background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); color: #E0E0E0; }
+    
+    /* 静态 LOGO 区域 */
+    .logo-container {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-top: 10px;
+    }
+    .logo-text {
+        font-family: 'Inter', 'Helvetica Neue', sans-serif;
+        font-weight: 800;
+        font-size: 2.2rem;
+        margin-left: 12px;
+        color: #FFFFFF;
+        letter-spacing: -1px;
+    }
+    .logo-icon-svg {
+        filter: drop-shadow(0 0 5px rgba(0, 255, 194, 0.3));
+    }
+
+    /* 紧凑 UI 组件 */
     .stTextInput { max-width: 300px; } 
     .stTextInput>div>div>input { background-color: #f0f2f6; color: #1a1a1a !important; border: 1px solid #7928ca; font-size: 16px !important; }
     .stButton>button { 
@@ -42,10 +62,40 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# 🚀 手机 K 线脚本补丁
-components.html('<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>', height=0)
+# 🚀 插入静态 SVG LOGO
+st.markdown("""
+    <div class="logo-container">
+        <svg class="logo-icon-svg" width="45" height="45" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="100" height="100" rx="15" fill="#1a1a1a" />
+            <path d="M25 65L40 50L55 60L75 35" stroke="#00FFC2" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+            <circle cx="75" cy="35" r="5" fill="#FF3131" />
+        </svg>
+        <span class="logo-text">多比 duobi</span>
+    </div>
+""", unsafe_allow_html=True)
 
-# 2. 核心算法
+st.caption("周易八星磁场扫描 + DeepSeek-V3 深度解说")
+
+# 🛡️ 隐私保护声明（白底黑字保持不动）
+st.markdown("""
+    <div class="privacy-trust-box">
+        <b style="color:#000000;">🛡️ 隐私保护声明：</b><br>
+        本站不设数据库，您的输入信息仅用于AI实时演算，不会被存储或转售。请放心使用。
+    </div>
+""", unsafe_allow_html=True)
+
+# --- 核心逻辑封存（输入、算法、K线、清空机制） ---
+
+u_name = st.text_input("👤 您的昵称", placeholder="访客模式可留空", key="u_name_key")
+p_input = st.text_input("📱 手机号码", placeholder="输入11位待测号码", key="p_input_key")
+
+st.markdown("**📊 选择 K 线演算维度：**")
+k_select = st.radio(
+    label="K线选项",
+    options=["财运+事业", "感情+家庭", "全部都要 (财/事/感/家)"],
+    index=0, horizontal=True, label_visibility="collapsed", key="k_select_key"
+)
+
 def analyze_numerology(phone):
     stars_cfg = {
         "天医(财)": ["13", "31", "68", "86", "49", "94", "27", "72"],
@@ -84,28 +134,6 @@ def get_ai_reading(nickname, scores, counts):
         return r.json()['choices'][0]['message']['content']
     except: return "📡 大师正在闭关（网络拥堵），请点击按钮重新演算。"
 
-# 3. 首页区域
-st.title("🔮 多比 duobi")
-st.caption("周易八星磁场扫描 + DeepSeek-V3 深度解说")
-
-st.markdown("""
-    <div class="privacy-trust-box">
-        <b style="color:#000000;">🛡️ 隐私保护声明：</b><br>
-        本站不设数据库，您的输入信息仅用于AI实时演算，不会被存储或转售。请放心使用。
-    </div>
-""", unsafe_allow_html=True)
-
-# 输入区域（绑定 Key 用于自动清空）
-u_name = st.text_input("👤 您的昵称", placeholder="访客模式可留空", key="u_name_key")
-p_input = st.text_input("📱 手机号码", placeholder="输入11位待测号码", key="p_input_key")
-
-st.markdown("**📊 选择 K 线演算维度：**")
-k_select = st.radio(
-    label="K线选项",
-    options=["财运+事业", "感情+家庭", "全部都要 (财/事/感/家)"],
-    index=0, horizontal=True, label_visibility="collapsed", key="k_select_key"
-)
-
 analyze_btn = st.button("🚀 开始哈希演算")
 
 if analyze_btn:
@@ -129,7 +157,6 @@ if analyze_btn:
         effective_name = u_name if u_name.strip() else "访客"
         st.success(f"演算成功，{effective_name}阁下您的手机号码能量分：{total_score} 分")
         
-        # 磁场解盘：极致左对齐
         st.markdown(f"**⚡ 磁场解盘：** `{summary['吉']}吉` | `{summary['凶']}凶` | `{summary['平']}平`")
         star_html = '<div class="star-grid">'
         for label, val in counts.items():
@@ -172,14 +199,11 @@ if analyze_btn:
             reading = get_ai_reading(effective_name, scores, counts)
             st.markdown(reading)
         
-        # 🚀 分享与重置区域
         share_text = f"🔮 我在 #多比duobi 测得 2026 综合评分：{total_score}分！"
         st.markdown(f'<a href="https://twitter.com/intent/tweet?text={urllib.parse.quote(share_text)}" target="_blank"><button style="background-color: #1DA1F2; color: white; border: none; padding: 12px; border-radius: 25px; font-weight: bold; width: 100%; max-width: 300px;">🐦 分享到 X (Twitter)</button></a>', unsafe_allow_html=True)
         
-        # 修改点：清空逻辑加固 + 文案精简
         st.write("") 
         if st.button("🔄 演算新号码", key="reset_trigger"):
-            # 物理清除 Session State 中的输入值
             st.session_state["u_name_key"] = ""
             st.session_state["p_input_key"] = ""
             st.rerun()
