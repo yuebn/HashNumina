@@ -17,19 +17,19 @@ st.set_page_config(page_title="多比 duobi", layout="wide")
 st.markdown("""
     <style>
     .main { background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); color: #E0E0E0; }
-    /* 缩短输入框：通过设置 max-width 保持页面简洁 */
+    /* 缩短输入框 */
     .stTextInput { max-width: 300px; } 
     .stTextInput>div>div>input { background-color: #f0f2f6; color: #1a1a1a !important; border: 1px solid #7928ca; font-size: 16px !important; }
     .stButton>button { 
         background: linear-gradient(45deg, #7928ca, #ff0080); 
         color: white; font-weight: bold; border: none; border-radius: 10px; height: 3.5em; width: 100%; max-width: 300px; margin-top: 10px;
     }
-    /* 选项组样式：靠左对齐 */
-    .stMultiSelect { max-width: 400px; }
+    /* 隐私声明白底黑字方案 */
     .privacy-trust-box { 
         color: #000000 !important; font-size: 0.9em; line-height: 1.6; padding: 12px; border: 2px solid #00FFC2; 
         border-radius: 12px; background-color: #FFFFFF !important; margin: 10px 0; max-width: 500px;
     }
+    /* 左对齐布局 */
     .star-grid { display: flex; flex-wrap: wrap; max-width: 420px; margin-left: 0; justify-content: flex-start; }
     .star-item { flex: 0 0 25%; text-align: left; padding: 5px 0; }
     .star-label { font-size: 0.72em; color: #bbb; display: block; }
@@ -40,6 +40,9 @@ st.markdown("""
 
 # 🚀 手机 K 线脚本补丁
 components.html('<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>', height=0)
+
+# 页面顶部锚点，用于一键返回
+st.markdown("<div id='top'></div>", unsafe_allow_html=True)
 
 st.title("🔮 多比 duobi")
 st.caption("周易八星磁场扫描 + DeepSeek-V3 深度解说")
@@ -90,15 +93,18 @@ def get_ai_reading(nickname, scores, counts):
         return r.json()['choices'][0]['message']['content']
     except: return "📡 大师正在闭关（网络拥堵），请点击按钮重新演算。"
 
-# 3. 响应逻辑
+# 3. 首页输入区域
 u_name = st.text_input("👤 您的昵称", placeholder="访客模式可留空")
 p_input = st.text_input("📱 手机号码", placeholder="输入11位待测号码")
 
-# 🚀 增加 K 线选择选项组（靠左对齐，非折叠）
-k_options = st.multiselect(
-    "📊 选择 K 线演算维度 (不选默认测第一组)",
-    ["财运+事业", "感情+家庭"],
-    default=["财运+事业"]
+# 🚀 优化：平铺式选项组，不再折叠
+st.markdown("**📊 选择 K 线演算维度：**")
+k_select = st.radio(
+    label="K线选项",
+    options=["财运+事业", "感情+家庭", "全部都要 (财/事/感/家)"],
+    index=0,
+    horizontal=True,
+    label_visibility="collapsed"
 )
 
 analyze_btn = st.button("🚀 开始哈希演算")
@@ -125,16 +131,14 @@ if analyze_btn:
         st.markdown("### 📊 项目月线运势 K 线图")
         ganzhi_months = ["庚子", "辛丑", "壬寅", "癸卯", "甲辰", "乙巳", "丙午", "丁未", "戊申", "己酉", "庚戌", "辛亥"]
         
-        # 🚀 根据选项过滤 K 线展示
+        # 🚀 逻辑过滤
         display_list = []
-        if "财运+事业" in k_options:
-            display_list.extend([("财运", scores["财运"]), ("事业", scores["事业"])])
-        if "感情+家庭" in k_options:
-            display_list.extend([("情感", scores["情感"]), ("家庭", scores["家庭"])])
-        
-        # 如果用户一个都没选，默认显示第一组
-        if not display_list:
+        if k_select == "财运+事业":
             display_list = [("财运", scores["财运"]), ("事业", scores["事业"])]
+        elif k_select == "感情+家庭":
+            display_list = [("情感", scores["情感"]), ("家庭", scores["家庭"])]
+        else:
+            display_list = [("财运", scores["财运"]), ("事业", scores["事业"]), ("情感", scores["情感"]), ("家庭", scores["家庭"])]
 
         k_cols = st.columns(2)
         for idx, (name, score) in enumerate(display_list):
@@ -153,9 +157,12 @@ if analyze_btn:
                 fig.update_layout(template="plotly_dark", height=260, xaxis_rangeslider_visible=False, margin=dict(l=0,r=0,t=10,b=10), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
                 st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False, 'responsive': True})
 
-        # 🚀 检查是否四项全开，决定是否显示引导语
-        if len(k_options) < 2:
-            st.info("💡 财运/事业/感情/家庭 这四项都要演算吗？请返回首页重新选择演算选项。")
+        # 🚀 动态提示文字 + 一键返回按钮
+        if k_select != "全部都要 (财/事/感/家)":
+            st.info("💡 财运/事业/感情/家庭 这四项都要演算吗？请点击下方按钮重新选择。")
+            if st.button("🔙 返回首页重新选择"):
+                st.markdown('<script>window.scrollTo(0,0);</script>', unsafe_allow_html=True)
+                st.rerun()
 
         st.write("---")
         st.subheader("📝 大师深度解说")
