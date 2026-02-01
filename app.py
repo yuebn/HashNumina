@@ -30,12 +30,10 @@ st.markdown("""
     .art-logo-en { font-family: 'Cinzel Decorative', serif; font-size: 2.2rem; color: #1a1a1a; letter-spacing: 4px; }
     .brand-subtitle { color: #bbb; font-size: 1rem; margin-top: 10px; margin-bottom: 25px; }
 
-    /* 输入框与按钮 */
     .stTextInput { max-width: 300px; } 
     .stTextInput>div>div>input { background-color: #f0f2f6; color: #1a1a1a !important; border: 1px solid #7928ca; font-size: 16px !important; }
     .stButton>button { background: linear-gradient(45deg, #7928ca, #ff0080); color: white; font-weight: bold; border: none; border-radius: 10px; height: 3.5em; width: 100%; max-width: 300px; margin-top: 10px; }
 
-    /* 🛡️ 捐赠框：修复手机溢出问题 */
     .privacy-trust-box { 
         color: #000000 !important; font-size: 0.85em; line-height: 1.6; padding: 15px; border: 2px solid #00FFC2; 
         border-radius: 12px; background-color: #FFFFFF !important; margin: 10px 0; max-width: 100%; box-sizing: border-box;
@@ -46,13 +44,13 @@ st.markdown("""
         padding: 8px 12px;
         background: #f8f9fa;
         border-radius: 8px;
-        display: flex; /* 改为 flex 布局 */
-        flex-wrap: wrap; /* 手机端自动换行 */
+        display: flex;
+        flex-wrap: wrap;
         align-items: center;
         gap: 10px;
         border: 1px solid #e1e4e8;
         margin-top: 10px;
-        word-break: break-all; /* 地址强行换行 */
+        word-break: break-all;
     }
     .copy-container:active { background: #ececec; }
     .copy-icon-svg { color: #7928ca; flex-shrink: 0; }
@@ -74,7 +72,7 @@ st.markdown("""
     <div class="brand-subtitle">周易八星磁场扫描 + DeepSeek-V3 深度解说</div>
 """, unsafe_allow_html=True)
 
-# 🚀 修复版 JavaScript：直接绑定与反馈
+# 🚀 复制逻辑 JavaScript
 components.html("""
     <script>
     const ADDR = '0x319cc9dabfb14578652e6e022a332076000a97e7';
@@ -90,7 +88,6 @@ components.html("""
             }
         });
     }
-    // 监听来自父页面的点击信号
     window.parent.document.addEventListener('click', function(e) {
         if (e.target.closest('#copy-box')) {
             execCopy();
@@ -99,13 +96,13 @@ components.html("""
     </script>
     """, height=0)
 
-# 🛡️ 隐私保护声明与修复后的捐赠地址
+# 🛡️ 隐私保护声明与捐赠地址（已移除括号提示）
 st.markdown("""
     <div class="privacy-trust-box">
         <b style="color:#000000;">🛡️ 隐私保护声明：</b><br>
         本站免费使用，不设数据库，您的输入信息仅用于AI实时演算，不会被存储或转售。请放心使用。<br>
         <b>🙏 如您愿意捐赠，功德无量！</b><br>
-        捐赠地址 (点击地址或图标复制)：<br>
+        捐赠地址：<br>
         <div id="copy-box" class="copy-container">
             <code style="color:#7928ca; font-size:1.05em; font-weight:bold;">0x319cc9dabfb14578652e6e022a332076000a97e7</code>
             <span id="copy-status-wrap" class="copy-icon-svg">
@@ -118,7 +115,7 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# --- 以下核心交互与演算逻辑封存不变 ---
+# --- 以下逻辑保持原样 ---
 u_name = st.text_input("👤 您的昵称", placeholder="访客模式可留空", key="u_name_key")
 p_input = st.text_input("📱 手机号码", placeholder="输入11位待测号码", key="p_input_key")
 
