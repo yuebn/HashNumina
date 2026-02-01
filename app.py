@@ -17,30 +17,24 @@ st.set_page_config(page_title="多比 duobi", layout="wide")
 st.markdown("""
     <style>
     .main { background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); color: #E0E0E0; }
-    
-    /* 🚀 缩短输入框线条：限制最大宽度并居左 */
-    .stTextInput { max-width: 320px !important; }
+    /* 缩短输入框：通过设置 max-width 保持页面简洁 */
+    .stTextInput { max-width: 300px; } 
     .stTextInput>div>div>input { background-color: #f0f2f6; color: #1a1a1a !important; border: 1px solid #7928ca; font-size: 16px !important; }
-    
     .stButton>button { 
         background: linear-gradient(45deg, #7928ca, #ff0080); 
-        color: white; font-weight: bold; border: none; border-radius: 10px; height: 3.5em; width: 320px !important; margin-top: 10px;
+        color: white; font-weight: bold; border: none; border-radius: 10px; height: 3.5em; width: 100%; max-width: 300px; margin-top: 10px;
     }
-    
+    /* 选项组样式：靠左对齐 */
+    .stMultiSelect { max-width: 400px; }
     .privacy-trust-box { 
         color: #000000 !important; font-size: 0.9em; line-height: 1.6; padding: 12px; border: 2px solid #00FFC2; 
-        border-radius: 12px; background-color: #FFFFFF !important; margin: 10px 0;
+        border-radius: 12px; background-color: #FFFFFF !important; margin: 10px 0; max-width: 500px;
     }
-    
-    /* 磁场解盘布局封存 */
     .star-grid { display: flex; flex-wrap: wrap; max-width: 420px; margin-left: 0; justify-content: flex-start; }
     .star-item { flex: 0 0 25%; text-align: left; padding: 5px 0; }
     .star-label { font-size: 0.72em; color: #bbb; display: block; }
     .star-value { font-size: 1.05em; color: #00FFC2; font-weight: bold; display: block; }
     .footer { text-align: center; padding: 30px 10px; color: #888; font-size: 0.8em; }
-    
-    /* 选项组居左对齐 */
-    .stMultiSelect { max-width: 320px !important; margin-left: 0 !important; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -96,16 +90,15 @@ def get_ai_reading(nickname, scores, counts):
         return r.json()['choices'][0]['message']['content']
     except: return "📡 大师正在闭关（网络拥堵），请点击按钮重新演算。"
 
-# 3. 输入展示逻辑
+# 3. 响应逻辑
 u_name = st.text_input("👤 您的昵称", placeholder="访客模式可留空")
 p_input = st.text_input("📱 手机号码", placeholder="输入11位待测号码")
 
-# --- 🚀 选项组配置 ---
+# 🚀 增加 K 线选择选项组（靠左对齐，非折叠）
 k_options = st.multiselect(
-    "📊 K线显示选项 (可多选)",
+    "📊 选择 K 线演算维度 (不选默认测第一组)",
     ["财运+事业", "感情+家庭"],
-    default=["财运+事业"], # 默认显示第一组
-    help="请选择您想要查看的能量运势K线"
+    default=["财运+事业"]
 )
 
 analyze_btn = st.button("🚀 开始哈希演算")
@@ -121,7 +114,6 @@ if analyze_btn:
         effective_name = u_name if u_name.strip() else "访客"
         st.success(f"演算成功，{effective_name}阁下您的手机号码能量分：{total_score} 分")
         
-        # ⚡ 磁场解盘排版封存
         st.markdown(f"**⚡ 磁场解盘：** `{summary['吉']}吉` | `{summary['凶']}凶` | `{summary['平']}平`")
         star_html = '<div class="star-grid">'
         for label, val in counts.items():
@@ -130,42 +122,41 @@ if analyze_btn:
         st.markdown(star_html, unsafe_allow_html=True)
 
         st.divider()
-        # --- 🚀 动态 K 线逻辑 ---
         st.markdown("### 📊 项目月线运势 K 线图")
         ganzhi_months = ["庚子", "辛丑", "壬寅", "癸卯", "甲辰", "乙巳", "丙午", "丁未", "戊申", "己酉", "庚戌", "辛亥"]
         
-        # 确定显示哪些指标
-        target_metrics = []
-        if "财运+事业" in k_options: target_metrics.extend(["财运", "事业"])
-        if "感情+家庭" in k_options: target_metrics.extend(["情感", "家庭"])
+        # 🚀 根据选项过滤 K 线展示
+        display_list = []
+        if "财运+事业" in k_options:
+            display_list.extend([("财运", scores["财运"]), ("事业", scores["事业"])])
+        if "感情+家庭" in k_options:
+            display_list.extend([("情感", scores["情感"]), ("家庭", scores["家庭"])])
         
+        # 如果用户一个都没选，默认显示第一组
+        if not display_list:
+            display_list = [("财运", scores["财运"]), ("事业", scores["事业"])]
+
         k_cols = st.columns(2)
-        for idx, m_name in enumerate(target_metrics):
-            score = scores.get(m_name, 60)
-            np.random.seed(hash(p_input + m_name) % 1000000)
+        for idx, (name, score) in enumerate(display_list):
+            np.random.seed(hash(p_input + name) % 1000000)
             steps = 12
-            noise = np.random.normal(0, 3.5, steps)
-            trend = np.linspace(0, 10, steps) * (1 if score > 65 else -0.5)
-            c_prices = np.cumsum(noise) + trend + score
-            
+            c_prices = np.cumsum(np.random.normal(0, 3.5, steps)) + np.linspace(0, 10, steps) + score
             df = pd.DataFrame({'Month': ganzhi_months, 'Close': c_prices, 'Open': np.roll(c_prices, 1)})
             df.loc[0, 'Open'] = score - 2
             df['High'] = df[['Open', 'Close']].max(axis=1) + 1.5
             df['Low'] = df[['Open', 'Close']].min(axis=1) - 1.5
             
             with k_cols[idx % 2]:
-                st.markdown(f"#### {m_name} 运势")
-                fig = go.Figure(data=[go.Candlestick(
-                    x=df['Month'], open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'],
-                    increasing_line_color='#00FFC2', decreasing_line_color='#FF3131'
-                )])
-                fig.update_layout(template="plotly_dark", height=240, xaxis_rangeslider_visible=False, margin=dict(l=0,r=0,t=10,b=10), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+                st.markdown(f"#### {name} 运势")
+                fig = go.Figure(data=[go.Candlestick(x=df['Month'], open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'],
+                                                      increasing_line_color='#00FFC2', decreasing_line_color='#FF3131')])
+                fig.update_layout(template="plotly_dark", height=260, xaxis_rangeslider_visible=False, margin=dict(l=0,r=0,t=10,b=10), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
                 st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False, 'responsive': True})
-        
-        # --- 🚀 引导文案逻辑 ---
+
+        # 🚀 检查是否四项全开，决定是否显示引导语
         if len(k_options) < 2:
             st.info("💡 财运/事业/感情/家庭 这四项都要演算吗？请返回首页重新选择演算选项。")
-        
+
         st.write("---")
         st.subheader("📝 大师深度解说")
         with st.spinner("大师正在阅片中..."):
@@ -173,6 +164,6 @@ if analyze_btn:
             st.markdown(reading)
         
         share_text = f"🔮 我在 #多比duobi 测得 2026 综合评分：{total_score}分！"
-        st.markdown(f'<a href="https://twitter.com/intent/tweet?text={urllib.parse.quote(share_text)}" target="_blank"><button style="background-color: #1DA1F2; color: white; border: none; padding: 12px; border-radius: 25px; font-weight: bold; width: 100%;">🐦 分享到 X (Twitter)</button></a>', unsafe_allow_html=True)
+        st.markdown(f'<a href="https://twitter.com/intent/tweet?text={urllib.parse.quote(share_text)}" target="_blank"><button style="background-color: #1DA1F2; color: white; border: none; padding: 12px; border-radius: 25px; font-weight: bold; width: 100%; max-width: 300px;">🐦 分享到 X (Twitter)</button></a>', unsafe_allow_html=True)
 
 st.markdown(f'<div class="footer"><hr>© 2026 多比 duobi | <a href="https://x.com/btc1349" style="color:#00FFC2;text-decoration:none;">@btc1349</a></div>', unsafe_allow_html=True)
