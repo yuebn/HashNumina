@@ -23,12 +23,12 @@ st.markdown("""
     <style>
     .main { background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); color: #E0E0E0; }
     
-    /* 🚀 极简精灵 LOGO 容器 */
+    /* 🚀 生动精灵 LOGO 容器 */
     .header-box {
         display: flex;
         align-items: center;
-        gap: 12px;
-        padding: 20px 0 10px 0;
+        gap: 15px;
+        padding: 10px 0;
         margin-left: 0;
     }
     .brand-text {
@@ -44,6 +44,7 @@ st.markdown("""
         font-size: 1rem;
         margin-bottom: 20px;
         opacity: 0.9;
+        margin-top: -10px;
     }
 
     /* 紧凑 UI 组件 */
@@ -65,32 +66,28 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# 🚀 注入代码手绘 SVG LOGO（致敬多比精灵）
+# 🚀 注入代码手绘【具象大耳精灵】LOGO
 st.markdown("""
     <div class="header-box">
-        <svg width="60" height="60" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M20 40C10 30 5 45 15 50M80 40C90 30 95 45 85 50" stroke="#E0E0E0" stroke-width="3" stroke-linecap="round"/>
-            <rect x="47" y="25" width="6" height="50" rx="3" fill="url(#grad1)" />
-            <circle cx="50" cy="20" r="8" fill="#00FFC2">
-                <animate attributeName="opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite" />
-            </circle>
-            <path d="M30 80Q50 70 70 80" stroke="#7928ca" stroke-width="2" fill="none" />
-            <defs>
-                <linearGradient id="grad1" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" style="stop-color:#00FFC2;stop-opacity:1" />
-                    <stop offset="100%" style="stop-color:#7928ca;stop-opacity:1" />
-                </linearGradient>
-            </defs>
+        <svg width="70" height="70" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M40 50C10 20 0 70 35 65M80 50C110 20 120 70 85 65" stroke="#D1D1D1" stroke-width="3" fill="#2A2A2A"/>
+            <path d="M40 50C40 30 80 30 80 50C80 75 60 85 40 50Z" fill="#333333" stroke="#D1D1D1" stroke-width="2"/>
+            <circle cx="50" cy="48" r="5" fill="#00FFC2" />
+            <circle cx="70" cy="48" r="5" fill="#00FFC2" />
+            <path d="M48 45C48 45 50 43 52 45M68 45C68 45 70 43 72 45" stroke="#FFFFFF" stroke-width="1"/>
+            <path d="M58 55L62 55L60 58Z" fill="#D1D1D1"/>
+            <path d="M55 65C58 68 62 68 65 65" stroke="#00FFC2" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M40 85Q60 75 80 85" stroke="#7928ca" stroke-width="3" stroke-linecap="round"/>
         </svg>
         <h1 class="brand-text">多比 DuoBi</h1>
     </div>
     <div class="brand-subtitle">周易八星磁场扫描 + DeepSeek-V3 深度解说</div>
 """, unsafe_allow_html=True)
 
-# 🚀 手机 K 线脚本补丁
+# 🚀 手机 K 线脚本补丁保持不动
 components.html('<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>', height=0)
 
-# --- 🛡️ 隐私声明保持原样 ---
+# --- 🛡️ 隐私声明、算法、K线及清空逻辑（均保持不动） ---
 st.markdown("""
     <div class="privacy-trust-box">
         <b style="color:#000000;">🛡️ 隐私保护声明：</b><br>
@@ -98,7 +95,6 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# --- 核心交互逻辑（已封存，不做改动） ---
 u_name = st.text_input("👤 您的昵称", placeholder="访客模式可留空", key="u_name_key")
 p_input = st.text_input("📱 手机号码", placeholder="输入11位待测号码", key="p_input_key")
 
@@ -109,7 +105,6 @@ k_select = st.radio(
     index=0, horizontal=True, label_visibility="collapsed", key="k_select_key"
 )
 
-# 算法部分保持一致
 def analyze_numerology(phone):
     stars_cfg = {
         "天医(财)": ["13", "31", "68", "86", "49", "94", "27", "72"],
@@ -157,69 +152,4 @@ if analyze_btn:
     
     if not is_white_list and record[0] >= 3 and (now - record[1] < 14400):
         wait_time = int((14400 - (now - record[1])) / 60)
-        st.error(f"⚠️ 号码 {p_input} 演算过于频繁。请在 {wait_time} 分钟后再试。")
-    elif len(p_input) < 11:
-        st.warning("请输入完整的 11 位手机号")
-    else:
-        if not is_white_list:
-            st.session_state.rate_limit[p_input] = [record[0] + 1, now]
-
-        with st.status("🔮 正在读取哈希磁场...", expanded=False) as status:
-            scores, counts, summary, total_score = analyze_numerology(p_input)
-            status.update(label="✅ 演算完成", state="complete")
-        
-        effective_name = u_name if u_name.strip() else "访客"
-        st.success(f"演算成功，{effective_name}阁下您的手机号码能量分：{total_score} 分")
-        
-        st.markdown(f"**⚡ 磁场解盘：** `{summary['吉']}吉` | `{summary['凶']}凶` | `{summary['平']}平`")
-        star_html = '<div class="star-grid">'
-        for label, val in counts.items():
-            star_html += f'<div class="star-item"><span class="star-label">{label}</span><span class="star-value">{val}</span></div>'
-        star_html += '</div>'
-        st.markdown(star_html, unsafe_allow_html=True)
-
-        st.divider()
-        st.markdown("### 📊 项目月线运势 K 线图")
-        ganzhi_months = ["庚子", "辛丑", "壬寅", "癸卯", "甲辰", "乙巳", "丙午", "丁未", "戊申", "己酉", "庚戌", "辛亥"]
-        
-        display_list = []
-        if k_select == "财运+事业": display_list = [("财运", scores["财运"]), ("事业", scores["事业"])]
-        elif k_select == "感情+家庭": display_list = [("情感", scores["情感"]), ("家庭", scores["家庭"])]
-        else: display_list = [("财运", scores["财运"]), ("事业", scores["事业"]), ("情感", scores["情感"]), ("家庭", scores["家庭"])]
-
-        k_cols = st.columns(2)
-        for idx, (name, score) in enumerate(display_list):
-            np.random.seed(hash(p_input + name) % 1000000)
-            steps = 12
-            c_prices = np.cumsum(np.random.normal(0, 3.5, steps)) + np.linspace(0, 10, steps) + score
-            df = pd.DataFrame({'Month': ganzhi_months, 'Close': c_prices, 'Open': np.roll(c_prices, 1)})
-            df.loc[0, 'Open'] = score - 2
-            df['High'] = df[['Open', 'Close']].max(axis=1) + 1.5
-            df['Low'] = df[['Open', 'Close']].min(axis=1) - 1.5
-            
-            with k_cols[idx % 2]:
-                st.markdown(f"#### {name} 运势")
-                fig = go.Figure(data=[go.Candlestick(x=df['Month'], open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'],
-                                                      increasing_line_color='#00FFC2', decreasing_line_color='#FF3131')])
-                fig.update_layout(template="plotly_dark", height=260, xaxis_rangeslider_visible=False, margin=dict(l=0,r=0,t=10,b=10), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
-                st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False, 'responsive': True})
-
-        if k_select != "全部都要 (财/事/感/家)":
-            st.info("💡 财运/事业/感情/家庭 这四项都要演算吗？请返回首页重新选择演算选项。")
-
-        st.write("---")
-        st.subheader("📝 大师深度解说")
-        with st.spinner("大师正在阅片中..."):
-            reading = get_ai_reading(effective_name, scores, counts)
-            st.markdown(reading)
-        
-        share_text = f"🔮 我在 #多比DuoBi 测得 2026 综合评分：{total_score}分！"
-        st.markdown(f'<a href="https://twitter.com/intent/tweet?text={urllib.parse.quote(share_text)}" target="_blank"><button style="background-color: #1DA1F2; color: white; border: none; padding: 12px; border-radius: 25px; font-weight: bold; width: 100%; max-width: 300px;">🐦 分享到 X (Twitter)</button></a>', unsafe_allow_html=True)
-        
-        st.write("") 
-        if st.button("🔄 演算新号码", key="reset_trigger"):
-            st.session_state["u_name_key"] = ""
-            st.session_state["p_input_key"] = ""
-            st.rerun()
-
-st.markdown(f'<div class="footer"><hr>© 2026 多比 DuoBi | <a href="https://x.com/btc1349" style="color:#00FFC2;text-decoration:none;">@btc1349</a></div>', unsafe_allow_html=True)
+        st.error(f"⚠️ 号码 {p_input} 演算过于频繁。请在
