@@ -25,38 +25,35 @@ st.markdown("""
 
     .main { background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); color: #E0E0E0; }
     
-    /* 🚀 品牌名称配色调整 */
     .header-box { padding: 20px 0 5px 0; text-align: left; }
     .art-logo-cn {
         font-family: 'Ma Shan Zheng', cursive;
         font-size: 3.5rem;
-        color: #000000 !important; /* 黑色字体 */
+        color: #000000 !important;
         margin-bottom: -15px;
         display: block;
     }
     .art-logo-en {
         font-family: 'Cinzel Decorative', serif;
         font-size: 2.2rem;
-        color: #1a1a1a; /* 配合黑色的深色拼音 */
+        color: #1a1a1a;
         letter-spacing: 4px;
     }
     
-    /* 去除演算完成的方框背景 */
-    div[data-testid="stStatusWidget"] { border: none !important; background: transparent !important; }
-
     .brand-subtitle { color: #bbb; font-size: 1rem; margin-top: 10px; margin-bottom: 25px; }
 
     .stTextInput { max-width: 300px; } 
     .stTextInput>div>div>input { background-color: #f0f2f6; color: #1a1a1a !important; border: 1px solid #7928ca; font-size: 16px !important; }
     
-    /* 按钮样式：移除图标后的纯文字设计 */
     .stButton>button { 
         background: linear-gradient(45deg, #7928ca, #ff0080); 
         color: white; font-weight: bold; border: none; border-radius: 10px; height: 3.5em; width: 100%; max-width: 300px; margin-top: 10px;
     }
+    /* 优化后的隐私与捐赠框样式 */
     .privacy-trust-box { 
-        color: #000000 !important; font-size: 0.9em; line-height: 1.6; padding: 12px; border: 2px solid #00FFC2; 
-        border-radius: 12px; background-color: #FFFFFF !important; margin: 10px 0; max-width: 500px;
+        color: #000000 !important; font-size: 0.85em; line-height: 1.6; padding: 15px; border: 2px solid #00FFC2; 
+        border-radius: 12px; background-color: #FFFFFF !important; margin: 10px 0; max-width: 600px;
+        word-wrap: break-word; word-break: break-all;
     }
     .star-grid { display: flex; flex-wrap: wrap; max-width: 420px; margin-left: 0; justify-content: flex-start; }
     .star-item { flex: 0 0 25%; text-align: left; padding: 5px 0; }
@@ -77,11 +74,13 @@ st.markdown("""
 
 components.html('<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>', height=0)
 
-# 🛡️ 隐私声明保持不动
+# 🛡️ 隐私保护声明与捐赠地址
 st.markdown("""
     <div class="privacy-trust-box">
         <b style="color:#000000;">🛡️ 隐私保护声明：</b><br>
-        本站不设数据库，您的输入信息仅用于AI实时演算，不会被存储或转售。请放心使用。
+        本站免费使用，不设数据库，您的输入信息仅用于AI实时演算，不会被存储或转售。请放心使用。<br>
+        <b>🙏 如您愿意捐赠，功德无量！</b><br>
+        捐赠地址：<code style="color:#7928ca; font-size:1.1em;">0x319cc9dabfb14578652e6e022a332076000a97e7</code>
     </div>
 """, unsafe_allow_html=True)
 
@@ -129,7 +128,6 @@ def get_ai_reading(nickname, scores, counts):
         return r.json()['choices'][0]['message']['content']
     except: return "📡 大师正在闭关（网络拥堵），请点击按钮重新演算。"
 
-# 去掉火箭图标
 analyze_btn = st.button("开始哈希演算")
 
 if analyze_btn:
@@ -146,10 +144,8 @@ if analyze_btn:
         if not is_white_list:
             st.session_state.rate_limit[p_input] = [record[0] + 1, now]
 
-        # 优化显示状态
-        with st.status("正在读取哈希磁场...", expanded=False) as status:
-            scores, counts, summary, total_score = analyze_numerology(p_input)
-            status.update(label="演算完成", state="complete")
+        # 🚀 隐藏状态方框，直接执行演算
+        scores, counts, summary, total_score = analyze_numerology(p_input)
         
         effective_name = u_name if u_name.strip() else "访客"
         st.success(f"演算成功，{effective_name}阁下您的手机号码能量分：{total_score} 分")
@@ -192,11 +188,11 @@ if analyze_btn:
 
         st.write("---")
         st.subheader("📝 大师深度解说")
-        with st.spinner("大师正在阅片中..."):
+        # 🚀 优化后的加载提示
+        with st.spinner("大师正在演算中，请稍后..."):
             reading = get_ai_reading(effective_name, scores, counts)
             st.markdown(reading)
         
-        # 去掉小圆球/鸟图标
         share_text = f"我在 #多比DuoBi 测得 2026 综合评分：{total_score}分！"
         st.markdown(f'<a href="https://twitter.com/intent/tweet?text={urllib.parse.quote(share_text)}" target="_blank"><button style="background-color: #1DA1F2; color: white; border: none; padding: 12px; border-radius: 25px; font-weight: bold; width: 100%; max-width: 300px;">分享到 X (Twitter)</button></a>', unsafe_allow_html=True)
         
