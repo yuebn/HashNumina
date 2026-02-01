@@ -91,7 +91,7 @@ components.html('<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script
 st.markdown("""
     <div class="privacy-trust-box">
         <b style="color:#000000;">🛡️ 隐私保护声明：</b><br>
-        本站不设数据库，您的输入信息仅用于AI实时演算，不会被存储或转售。请放心使用。
+        本站免费，不设数据库，您的输入信息仅用于AI实时演算，不会被存储或转售。请放心使用。
     </div>
 """, unsafe_allow_html=True)
 
@@ -204,7 +204,7 @@ if analyze_btn:
 
         st.write("---")
         st.subheader("📝 大师深度解说")
-        with st.spinner("大师正在阅片中..."):
+        with st.spinner("大师正在演算中，请稍后..."):
             reading = get_ai_reading(effective_name, scores, counts)
             st.markdown(reading)
         
@@ -218,3 +218,4 @@ if analyze_btn:
             st.rerun()
 
 st.markdown(f'<div class="footer"><hr>© 2026 多比 DuoBi | <a href="https://x.com/btc1349" style="color:#00FFC2;text-decoration:none;">@btc1349</a></div>', unsafe_allow_html=True)
+
