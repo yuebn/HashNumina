@@ -4,12 +4,19 @@ import numpy as np
 import plotly.graph_objects as go
 import requests
 import urllib.parse
+import time
 import streamlit.components.v1 as components
 
 # ==========================================
-# 🔑 核心配置：API Key
+# 🔑 核心配置与安全策略
 # ==========================================
 DEEPSEEK_API_KEY = st.secrets.get("DEEPSEEK_API_KEY", "sk-899d54012ab145588d06927811ff8562")
+# 隐藏测试白名单号码的逻辑逻辑
+TEST_WHITELIST_STUB = "18923487413" 
+
+# 初始化频率限制缓存 (4小时有效期)
+if 'rate_limit' not in st.session_state:
+    st.session_state['rate_limit'] = {}
 
 # 1. 页面配置与视觉注入
 st.set_page_config(page_title="多比 duobi", layout="wide")
@@ -17,19 +24,17 @@ st.set_page_config(page_title="多比 duobi", layout="wide")
 st.markdown("""
     <style>
     .main { background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); color: #E0E0E0; }
-    /* 缩短输入框 */
     .stTextInput { max-width: 300px; } 
     .stTextInput>div>div>input { background-color: #f0f2f6; color: #1a1a1a !important; border: 1px solid #7928ca; font-size: 16px !important; }
     .stButton>button { 
         background: linear-gradient(45deg, #7928ca, #ff0080); 
         color: white; font-weight: bold; border: none; border-radius: 10px; height: 3.5em; width: 100%; max-width: 300px; margin-top: 10px;
     }
-    /* 隐私声明白底黑字方案 */
+    .reset-btn>button { background: transparent !important; border: 1px solid #7928ca !important; color: #7928ca !important; height: 3em !important; }
     .privacy-trust-box { 
         color: #000000 !important; font-size: 0.9em; line-height: 1.6; padding: 12px; border: 2px solid #00FFC2; 
         border-radius: 12px; background-color: #FFFFFF !important; margin: 10px 0; max-width: 500px;
     }
-    /* 左对齐布局 */
     .star-grid { display: flex; flex-wrap: wrap; max-width: 420px; margin-left: 0; justify-content: flex-start; }
     .star-item { flex: 0 0 25%; text-align: left; padding: 5px 0; }
     .star-label { font-size: 0.72em; color: #bbb; display: block; }
@@ -40,19 +45,6 @@ st.markdown("""
 
 # 🚀 手机 K 线脚本补丁
 components.html('<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>', height=0)
-
-# 页面顶部锚点，用于一键返回
-st.markdown("<div id='top'></div>", unsafe_allow_html=True)
-
-st.title("🔮 多比 duobi")
-st.caption("周易八星磁场扫描 + DeepSeek-V3 深度解说")
-
-st.markdown("""
-    <div class="privacy-trust-box">
-        <b style="color:#000000;">🛡️ 隐私保护声明：</b><br>
-        本站不设数据库，您的输入信息仅用于AI实时演算，不会被存储或转售。请放心使用。
-    </div>
-""", unsafe_allow_html=True)
 
 # 2. 核心算法
 def analyze_numerology(phone):
@@ -93,26 +85,50 @@ def get_ai_reading(nickname, scores, counts):
         return r.json()['choices'][0]['message']['content']
     except: return "📡 大师正在闭关（网络拥堵），请点击按钮重新演算。"
 
-# 3. 首页输入区域
-u_name = st.text_input("👤 您的昵称", placeholder="访客模式可留空")
-p_input = st.text_input("📱 手机号码", placeholder="输入11位待测号码")
+# 3. 首页区域
+st.title("🔮 多比 duobi")
+st.caption("周易八星磁场扫描 + DeepSeek-V3 深度解说")
 
-# 🚀 优化：平铺式选项组，不再折叠
+st.markdown("""
+    <div class="privacy-trust-box">
+        <b style="color:#000000;">🛡️ 隐私保护声明：</b><br>
+        本站不设数据库，您的输入信息仅用于AI实时演算，不会被存储或转售。请放心使用。
+    </div>
+""", unsafe_allow_html=True)
+
+# 输入区域（带 Key 绑定，便于重置）
+u_name = st.text_input("👤 您的昵称", placeholder="访客模式可留空", key="input_name")
+p_input = st.text_input("📱 手机号码", placeholder="输入11位待测号码", key="input_phone")
+
 st.markdown("**📊 选择 K 线演算维度：**")
 k_select = st.radio(
     label="K线选项",
     options=["财运+事业", "感情+家庭", "全部都要 (财/事/感/家)"],
-    index=0,
-    horizontal=True,
-    label_visibility="collapsed"
+    index=0, horizontal=True, label_visibility="collapsed", key="input_k_choice"
 )
 
 analyze_btn = st.button("🚀 开始哈希演算")
 
 if analyze_btn:
-    if len(p_input) < 11:
+    # 🚀 频率限制逻辑
+    now = time.time()
+    is_white_list = (p_input == TEST_WHITELIST_STUB)
+    
+    # 获取该号码的记录：[次数, 最后一次时间]
+    record = st.session_state.rate_limit.get(p_input, [0, 0])
+    
+    # 检查是否在4小时惩罚期内 (4小时 = 14400秒)
+    if not is_white_list and record[0] >= 3 and (now - record[1] < 14400):
+        wait_time = int((14400 - (now - record[1])) / 60)
+        st.error(f"⚠️ 号码 {p_input} 演算过于频繁。该号码已达3次上限，请在 {wait_time} 分钟后再试。")
+    elif len(p_input) < 11:
         st.warning("请输入完整的 11 位手机号")
     else:
+        # 更新计数器（白名单不更新）
+        if not is_white_list:
+            new_count = record[0] + 1
+            st.session_state.rate_limit[p_input] = [new_count, now]
+
         with st.status("🔮 正在读取哈希磁场...", expanded=False) as status:
             scores, counts, summary, total_score = analyze_numerology(p_input)
             status.update(label="✅ 演算完成", state="complete")
@@ -120,6 +136,7 @@ if analyze_btn:
         effective_name = u_name if u_name.strip() else "访客"
         st.success(f"演算成功，{effective_name}阁下您的手机号码能量分：{total_score} 分")
         
+        # 磁场解盘
         st.markdown(f"**⚡ 磁场解盘：** `{summary['吉']}吉` | `{summary['凶']}凶` | `{summary['平']}平`")
         star_html = '<div class="star-grid">'
         for label, val in counts.items():
@@ -131,14 +148,10 @@ if analyze_btn:
         st.markdown("### 📊 项目月线运势 K 线图")
         ganzhi_months = ["庚子", "辛丑", "壬寅", "癸卯", "甲辰", "乙巳", "丙午", "丁未", "戊申", "己酉", "庚戌", "辛亥"]
         
-        # 🚀 逻辑过滤
         display_list = []
-        if k_select == "财运+事业":
-            display_list = [("财运", scores["财运"]), ("事业", scores["事业"])]
-        elif k_select == "感情+家庭":
-            display_list = [("情感", scores["情感"]), ("家庭", scores["家庭"])]
-        else:
-            display_list = [("财运", scores["财运"]), ("事业", scores["事业"]), ("情感", scores["情感"]), ("家庭", scores["家庭"])]
+        if k_select == "财运+事业": display_list = [("财运", scores["财运"]), ("事业", scores["事业"])]
+        elif k_select == "感情+家庭": display_list = [("情感", scores["情感"]), ("家庭", scores["家庭"])]
+        else: display_list = [("财运", scores["财运"]), ("事业", scores["事业"]), ("情感", scores["情感"]), ("家庭", scores["家庭"])]
 
         k_cols = st.columns(2)
         for idx, (name, score) in enumerate(display_list):
@@ -157,12 +170,8 @@ if analyze_btn:
                 fig.update_layout(template="plotly_dark", height=260, xaxis_rangeslider_visible=False, margin=dict(l=0,r=0,t=10,b=10), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
                 st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False, 'responsive': True})
 
-        # 🚀 动态提示文字 + 一键返回按钮
         if k_select != "全部都要 (财/事/感/家)":
-            st.info("💡 财运/事业/感情/家庭 这四项都要演算吗？请点击下方按钮重新选择。")
-            if st.button("🔙 返回首页重新选择"):
-                st.markdown('<script>window.scrollTo(0,0);</script>', unsafe_allow_html=True)
-                st.rerun()
+            st.info("💡 财运/事业/感情/家庭 这四项都要演算吗？请返回首页重新选择演算选项。")
 
         st.write("---")
         st.subheader("📝 大师深度解说")
@@ -170,7 +179,16 @@ if analyze_btn:
             reading = get_ai_reading(effective_name, scores, counts)
             st.markdown(reading)
         
+        # 🚀 分享与重置区域
         share_text = f"🔮 我在 #多比duobi 测得 2026 综合评分：{total_score}分！"
         st.markdown(f'<a href="https://twitter.com/intent/tweet?text={urllib.parse.quote(share_text)}" target="_blank"><button style="background-color: #1DA1F2; color: white; border: none; padding: 12px; border-radius: 25px; font-weight: bold; width: 100%; max-width: 300px;">🐦 分享到 X (Twitter)</button></a>', unsafe_allow_html=True)
+        
+        # 另起一行，添加清空重置按钮
+        st.write("") 
+        if st.button("🔄 演算新号码（清空并返回）", key="final_reset_btn"):
+            # 清除所有输入状态
+            for key in ["input_name", "input_phone"]:
+                st.session_state[key] = ""
+            st.rerun()
 
 st.markdown(f'<div class="footer"><hr>© 2026 多比 duobi | <a href="https://x.com/btc1349" style="color:#00FFC2;text-decoration:none;">@btc1349</a></div>', unsafe_allow_html=True)
