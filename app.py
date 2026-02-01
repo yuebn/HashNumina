@@ -26,49 +26,36 @@ st.markdown("""
     .main { background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); color: #E0E0E0; }
     
     .header-box { padding: 20px 0 5px 0; text-align: left; }
-    .art-logo-cn {
-        font-family: 'Ma Shan Zheng', cursive;
-        font-size: 3.5rem;
-        color: #000000 !important;
-        margin-bottom: -15px;
-        display: block;
-    }
-    .art-logo-en {
-        font-family: 'Cinzel Decorative', serif;
-        font-size: 2.2rem;
-        color: #1a1a1a;
-        letter-spacing: 4px;
-    }
-    
+    .art-logo-cn { font-family: 'Ma Shan Zheng', cursive; font-size: 3.5rem; color: #000000 !important; margin-bottom: -15px; display: block; }
+    .art-logo-en { font-family: 'Cinzel Decorative', serif; font-size: 2.2rem; color: #1a1a1a; letter-spacing: 4px; }
     .brand-subtitle { color: #bbb; font-size: 1rem; margin-top: 10px; margin-bottom: 25px; }
 
+    /* 输入框与按钮 */
     .stTextInput { max-width: 300px; } 
     .stTextInput>div>div>input { background-color: #f0f2f6; color: #1a1a1a !important; border: 1px solid #7928ca; font-size: 16px !important; }
-    
-    .stButton>button { 
-        background: linear-gradient(45deg, #7928ca, #ff0080); 
-        color: white; font-weight: bold; border: none; border-radius: 10px; height: 3.5em; width: 100%; max-width: 300px; margin-top: 10px;
-    }
+    .stButton>button { background: linear-gradient(45deg, #7928ca, #ff0080); color: white; font-weight: bold; border: none; border-radius: 10px; height: 3.5em; width: 100%; max-width: 300px; margin-top: 10px; }
 
+    /* 🛡️ 捐赠框：修复手机溢出问题 */
     .privacy-trust-box { 
         color: #000000 !important; font-size: 0.85em; line-height: 1.6; padding: 15px; border: 2px solid #00FFC2; 
-        border-radius: 12px; background-color: #FFFFFF !important; margin: 10px 0; max-width: 600px;
+        border-radius: 12px; background-color: #FFFFFF !important; margin: 10px 0; max-width: 100%; box-sizing: border-box;
     }
 
-    /* 🚀 标准两页叠加图标样式 */
     .copy-container {
         cursor: pointer;
-        padding: 6px 12px;
+        padding: 8px 12px;
         background: #f8f9fa;
         border-radius: 8px;
-        display: inline-flex;
+        display: flex; /* 改为 flex 布局 */
+        flex-wrap: wrap; /* 手机端自动换行 */
         align-items: center;
-        transition: all 0.2s ease;
+        gap: 10px;
         border: 1px solid #e1e4e8;
-        margin-top: 8px;
+        margin-top: 10px;
+        word-break: break-all; /* 地址强行换行 */
     }
-    .copy-container:hover { background: #f1f3f5; border-color: #7928ca; }
-    .copy-icon-svg { margin-left: 10px; color: #7928ca; }
+    .copy-container:active { background: #ececec; }
+    .copy-icon-svg { color: #7928ca; flex-shrink: 0; }
     
     .star-grid { display: flex; flex-wrap: wrap; max-width: 420px; margin-left: 0; justify-content: flex-start; }
     .star-item { flex: 0 0 25%; text-align: left; padding: 5px 0; }
@@ -87,40 +74,40 @@ st.markdown("""
     <div class="brand-subtitle">周易八星磁场扫描 + DeepSeek-V3 深度解说</div>
 """, unsafe_allow_html=True)
 
-# 🚀 注入 JavaScript 复制逻辑与反馈动画
+# 🚀 修复版 JavaScript：直接绑定与反馈
 components.html("""
     <script>
-    function copyAddress() {
-        const addr = '0x319cc9dabfb14578652e6e022a332076000a97e7';
-        navigator.clipboard.writeText(addr).then(() => {
-            const iconWrap = window.parent.document.getElementById('copy-status-wrap');
-            if(iconWrap) {
-                // 暂时切换为打勾图标
-                iconWrap.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="green" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+    const ADDR = '0x319cc9dabfb14578652e6e022a332076000a97e7';
+    function execCopy() {
+        const nav = window.parent.navigator;
+        nav.clipboard.writeText(ADDR).then(() => {
+            const wrap = window.parent.document.getElementById('copy-status-wrap');
+            if(wrap) {
+                wrap.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#28a745" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
                 setTimeout(() => {
-                    // 恢复叠加图标
-                    iconWrap.innerHTML = '<svg class="copy-icon-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+                    wrap.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7928ca" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
                 }, 2000);
             }
         });
     }
+    // 监听来自父页面的点击信号
     window.parent.document.addEventListener('click', function(e) {
         if (e.target.closest('#copy-box')) {
-            copyAddress();
+            execCopy();
         }
-    });
+    }, true);
     </script>
     """, height=0)
 
-# 🛡️ 隐私保护声明与含标准叠加图标的捐赠地址
+# 🛡️ 隐私保护声明与修复后的捐赠地址
 st.markdown("""
     <div class="privacy-trust-box">
         <b style="color:#000000;">🛡️ 隐私保护声明：</b><br>
         本站免费使用，不设数据库，您的输入信息仅用于AI实时演算，不会被存储或转售。请放心使用。<br>
         <b>🙏 如您愿意捐赠，功德无量！</b><br>
-        捐赠地址 (点击复制)：<br>
+        捐赠地址 (点击地址或图标复制)：<br>
         <div id="copy-box" class="copy-container">
-            <code style="color:#7928ca; font-size:1.05em; font-weight:bold; letter-spacing:0.5px;">0x319cc9dabfb14578652e6e022a332076000a97e7</code>
+            <code style="color:#7928ca; font-size:1.05em; font-weight:bold;">0x319cc9dabfb14578652e6e022a332076000a97e7</code>
             <span id="copy-status-wrap" class="copy-icon-svg">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
@@ -131,7 +118,7 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# --- 后续逻辑（输入、算法、K线等）保持原样 ---
+# --- 以下核心交互与演算逻辑封存不变 ---
 u_name = st.text_input("👤 您的昵称", placeholder="访客模式可留空", key="u_name_key")
 p_input = st.text_input("📱 手机号码", placeholder="输入11位待测号码", key="p_input_key")
 
@@ -191,28 +178,22 @@ if analyze_btn:
     else:
         if not is_white_list:
             st.session_state.rate_limit[p_input] = [record[0] + 1, now]
-
         scores, counts, summary, total_score = analyze_numerology(p_input)
-        
         effective_name = u_name if u_name.strip() else "访客"
         st.success(f"演算成功，{effective_name}阁下您的手机号码能量分：{total_score} 分")
-        
         st.markdown(f"**⚡ 磁场解盘：** `{summary['吉']}吉` | `{summary['凶']}凶` | `{summary['平']}平`")
         star_html = '<div class="star-grid">'
         for label, val in counts.items():
             star_html += f'<div class="star-item"><span class="star-label">{label}</span><span class="star-value">{val}</span></div>'
         star_html += '</div>'
         st.markdown(star_html, unsafe_allow_html=True)
-
         st.divider()
         st.markdown("### 📊 项目月线运势 K 线图")
         ganzhi_months = ["庚子", "辛丑", "壬寅", "癸卯", "甲辰", "乙巳", "丙午", "丁未", "戊申", "己酉", "庚戌", "辛亥"]
-        
         display_list = []
         if k_select == "财运+事业": display_list = [("财运", scores["财运"]), ("事业", scores["事业"])]
         elif k_select == "感情+家庭": display_list = [("情感", scores["情感"]), ("家庭", scores["家庭"])]
         else: display_list = [("财运", scores["财运"]), ("事业", scores["事业"]), ("情感", scores["情感"]), ("家庭", scores["家庭"])]
-
         k_cols = st.columns(2)
         for idx, (name, score) in enumerate(display_list):
             np.random.seed(hash(p_input + name) % 1000000)
@@ -222,23 +203,18 @@ if analyze_btn:
             df.loc[0, 'Open'] = score - 2
             df['High'] = df[['Open', 'Close']].max(axis=1) + 1.5
             df['Low'] = df[['Open', 'Close']].min(axis=1) - 1.5
-            
             with k_cols[idx % 2]:
                 st.markdown(f"#### {name} 运势")
-                fig = go.Figure(data=[go.Candlestick(x=df['Month'], open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'],
-                                                      increasing_line_color='#00FFC2', decreasing_line_color='#FF3131')])
+                fig = go.Figure(data=[go.Candlestick(x=df['Month'], open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'], increasing_line_color='#00FFC2', decreasing_line_color='#FF3131')])
                 fig.update_layout(template="plotly_dark", height=260, xaxis_rangeslider_visible=False, margin=dict(l=0,r=0,t=10,b=10), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
                 st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False, 'responsive': True})
-
         st.write("---")
         st.subheader("📝 大师深度解说")
         with st.spinner("大师正在演算中，请稍后..."):
             reading = get_ai_reading(effective_name, scores, counts)
             st.markdown(reading)
-        
         share_text = f"我在 #多比DuoBi 测得 2026 综合评分：{total_score}分！"
         st.markdown(f'<a href="https://twitter.com/intent/tweet?text={urllib.parse.quote(share_text)}" target="_blank"><button style="background-color: #1DA1F2; color: white; border: none; padding: 12px; border-radius: 25px; font-weight: bold; width: 100%; max-width: 300px;">分享到 X (Twitter)</button></a>', unsafe_allow_html=True)
-        
         st.write("") 
         if st.button("🔄 演算新号码", key="reset_trigger"):
             st.session_state["u_name_key"] = ""
