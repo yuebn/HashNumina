@@ -19,46 +19,37 @@ if 'rate_limit' not in st.session_state:
 # 1. 页面配置与视觉注入
 st.set_page_config(page_title="多比 DuoBi", layout="wide")
 
-# 🎨 注入 Google 艺术字体与自定义样式
 st.markdown("""
     <style>
-    /* 引入极具奇幻感的字体 */
-    @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Ma+Shan+Zheng&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Ma+Shan+Zheng&display=swap');
 
     .main { background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); color: #E0E0E0; }
     
-    /* 🚀 艺术字 LOGO 容器 */
-    .header-box {
-        padding: 20px 0 5px 0;
-        text-align: left;
-    }
+    /* 🚀 品牌名称配色调整 */
+    .header-box { padding: 20px 0 5px 0; text-align: left; }
     .art-logo-cn {
-        font-family: 'Ma Shan+Zheng', cursive; /* 艺术书法体 */
+        font-family: 'Ma Shan Zheng', cursive;
         font-size: 3.5rem;
-        background: linear-gradient(to bottom, #FFFFFF, #FFD700);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        color: #000000 !important; /* 黑色字体 */
         margin-bottom: -15px;
         display: block;
     }
     .art-logo-en {
-        font-family: 'Cinzel Decorative', serif; /* 魔法感艺术体 */
+        font-family: 'Cinzel Decorative', serif;
         font-size: 2.2rem;
-        color: #00FFC2;
+        color: #1a1a1a; /* 配合黑色的深色拼音 */
         letter-spacing: 4px;
-        text-shadow: 2px 2px 10px rgba(0, 255, 194, 0.5);
     }
-    .brand-subtitle {
-        color: #bbb;
-        font-size: 1rem;
-        margin-top: 10px;
-        margin-bottom: 25px;
-        letter-spacing: 1px;
-    }
+    
+    /* 去除演算完成的方框背景 */
+    div[data-testid="stStatusWidget"] { border: none !important; background: transparent !important; }
 
-    /* 紧凑 UI 组件 */
+    .brand-subtitle { color: #bbb; font-size: 1rem; margin-top: 10px; margin-bottom: 25px; }
+
     .stTextInput { max-width: 300px; } 
     .stTextInput>div>div>input { background-color: #f0f2f6; color: #1a1a1a !important; border: 1px solid #7928ca; font-size: 16px !important; }
+    
+    /* 按钮样式：移除图标后的纯文字设计 */
     .stButton>button { 
         background: linear-gradient(45deg, #7928ca, #ff0080); 
         color: white; font-weight: bold; border: none; border-radius: 10px; height: 3.5em; width: 100%; max-width: 300px; margin-top: 10px;
@@ -75,7 +66,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# 🚀 呈现艺术字 LOGO
+# 呈现品牌名称
 st.markdown("""
     <div class="header-box">
         <span class="art-logo-cn">多比</span>
@@ -84,10 +75,9 @@ st.markdown("""
     <div class="brand-subtitle">周易八星磁场扫描 + DeepSeek-V3 深度解说</div>
 """, unsafe_allow_html=True)
 
-# 🚀 手机 K 线脚本补丁保持不动
 components.html('<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>', height=0)
 
-# --- 🛡️ 隐私声明、算法、K线逻辑（严格封存） ---
+# 🛡️ 隐私声明保持不动
 st.markdown("""
     <div class="privacy-trust-box">
         <b style="color:#000000;">🛡️ 隐私保护声明：</b><br>
@@ -139,7 +129,8 @@ def get_ai_reading(nickname, scores, counts):
         return r.json()['choices'][0]['message']['content']
     except: return "📡 大师正在闭关（网络拥堵），请点击按钮重新演算。"
 
-analyze_btn = st.button("🚀 开始哈希演算")
+# 去掉火箭图标
+analyze_btn = st.button("开始哈希演算")
 
 if analyze_btn:
     now = time.time()
@@ -148,16 +139,17 @@ if analyze_btn:
     
     if not is_white_list and record[0] >= 3 and (now - record[1] < 14400):
         wait_time = int((14400 - (now - record[1])) / 60)
-        st.error(f"⚠️ 号码 {p_input} 演算过于频繁。请在 {wait_time} 分钟后再试。")
+        st.error(f"号码 {p_input} 演算过于频繁。请在 {wait_time} 分钟后再试。")
     elif len(p_input) < 11:
         st.warning("请输入完整的 11 位手机号")
     else:
         if not is_white_list:
             st.session_state.rate_limit[p_input] = [record[0] + 1, now]
 
-        with st.status("🔮 正在读取哈希磁场...", expanded=False) as status:
+        # 优化显示状态
+        with st.status("正在读取哈希磁场...", expanded=False) as status:
             scores, counts, summary, total_score = analyze_numerology(p_input)
-            status.update(label="✅ 演算完成", state="complete")
+            status.update(label="演算完成", state="complete")
         
         effective_name = u_name if u_name.strip() else "访客"
         st.success(f"演算成功，{effective_name}阁下您的手机号码能量分：{total_score} 分")
@@ -200,12 +192,13 @@ if analyze_btn:
 
         st.write("---")
         st.subheader("📝 大师深度解说")
-        with st.spinner("大师正在演算中，请稍后..."):
+        with st.spinner("大师正在阅片中..."):
             reading = get_ai_reading(effective_name, scores, counts)
             st.markdown(reading)
         
-        share_text = f" 我在 #多比DuoBi 测得 2026 综合评分：{total_score}分！"
-        st.markdown(f'<a href="https://twitter.com/intent/tweet?text={urllib.parse.quote(share_text)}" target="_blank"><button style="background-color: #1DA1F2; color: white; border: none; padding: 12px; border-radius: 25px; font-weight: bold; width: 100%; max-width: 300px;">🐦 分享到 X (Twitter)</button></a>', unsafe_allow_html=True)
+        # 去掉小圆球/鸟图标
+        share_text = f"我在 #多比DuoBi 测得 2026 综合评分：{total_score}分！"
+        st.markdown(f'<a href="https://twitter.com/intent/tweet?text={urllib.parse.quote(share_text)}" target="_blank"><button style="background-color: #1DA1F2; color: white; border: none; padding: 12px; border-radius: 25px; font-weight: bold; width: 100%; max-width: 300px;">分享到 X (Twitter)</button></a>', unsafe_allow_html=True)
         
         st.write("") 
         if st.button("🔄 演算新号码", key="reset_trigger"):
