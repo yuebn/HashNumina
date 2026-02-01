@@ -159,7 +159,7 @@ if analyze_btn:
         
         st.write("---")
         st.subheader("📝 大师深度解说")
-        with st.spinner("大师正在阅片中..."):
+        with st.spinner("大师正在测算中..."):
             reading = get_ai_reading(effective_name, scores, counts)
             st.markdown(reading)
         
@@ -167,3 +167,4 @@ if analyze_btn:
         st.markdown(f'<a href="https://twitter.com/intent/tweet?text={urllib.parse.quote(share_text)}" target="_blank"><button style="background-color: #1DA1F2; color: white; border: none; padding: 12px; border-radius: 25px; font-weight: bold; width: 100%;">🐦 分享到 X (Twitter)</button></a>', unsafe_allow_html=True)
 
 st.markdown(f'<div class="footer"><hr>© 2026 多比 duobi | <a href="https://x.com/btc1349" style="color:#00FFC2;text-decoration:none;">@btc1349</a></div>', unsafe_allow_html=True)
+
