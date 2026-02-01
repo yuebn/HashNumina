@@ -49,12 +49,27 @@ st.markdown("""
         background: linear-gradient(45deg, #7928ca, #ff0080); 
         color: white; font-weight: bold; border: none; border-radius: 10px; height: 3.5em; width: 100%; max-width: 300px; margin-top: 10px;
     }
-    /* 优化后的隐私与捐赠框样式 */
+
     .privacy-trust-box { 
         color: #000000 !important; font-size: 0.85em; line-height: 1.6; padding: 15px; border: 2px solid #00FFC2; 
         border-radius: 12px; background-color: #FFFFFF !important; margin: 10px 0; max-width: 600px;
-        word-wrap: break-word; word-break: break-all;
     }
+
+    /* 🚀 标准两页叠加图标样式 */
+    .copy-container {
+        cursor: pointer;
+        padding: 6px 12px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        transition: all 0.2s ease;
+        border: 1px solid #e1e4e8;
+        margin-top: 8px;
+    }
+    .copy-container:hover { background: #f1f3f5; border-color: #7928ca; }
+    .copy-icon-svg { margin-left: 10px; color: #7928ca; }
+    
     .star-grid { display: flex; flex-wrap: wrap; max-width: 420px; margin-left: 0; justify-content: flex-start; }
     .star-item { flex: 0 0 25%; text-align: left; padding: 5px 0; }
     .star-label { font-size: 0.72em; color: #bbb; display: block; }
@@ -72,18 +87,51 @@ st.markdown("""
     <div class="brand-subtitle">周易八星磁场扫描 + DeepSeek-V3 深度解说</div>
 """, unsafe_allow_html=True)
 
-components.html('<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>', height=0)
+# 🚀 注入 JavaScript 复制逻辑与反馈动画
+components.html("""
+    <script>
+    function copyAddress() {
+        const addr = '0x319cc9dabfb14578652e6e022a332076000a97e7';
+        navigator.clipboard.writeText(addr).then(() => {
+            const iconWrap = window.parent.document.getElementById('copy-status-wrap');
+            if(iconWrap) {
+                // 暂时切换为打勾图标
+                iconWrap.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="green" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+                setTimeout(() => {
+                    // 恢复叠加图标
+                    iconWrap.innerHTML = '<svg class="copy-icon-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+                }, 2000);
+            }
+        });
+    }
+    window.parent.document.addEventListener('click', function(e) {
+        if (e.target.closest('#copy-box')) {
+            copyAddress();
+        }
+    });
+    </script>
+    """, height=0)
 
-# 🛡️ 隐私保护声明与捐赠地址
+# 🛡️ 隐私保护声明与含标准叠加图标的捐赠地址
 st.markdown("""
     <div class="privacy-trust-box">
         <b style="color:#000000;">🛡️ 隐私保护声明：</b><br>
         本站免费使用，不设数据库，您的输入信息仅用于AI实时演算，不会被存储或转售。请放心使用。<br>
         <b>🙏 如您愿意捐赠，功德无量！</b><br>
-        捐赠地址：<code style="color:#7928ca; font-size:1.1em;">0x319cc9dabfb14578652e6e022a332076000a97e7</code>
+        捐赠地址 (点击复制)：<br>
+        <div id="copy-box" class="copy-container">
+            <code style="color:#7928ca; font-size:1.05em; font-weight:bold; letter-spacing:0.5px;">0x319cc9dabfb14578652e6e022a332076000a97e7</code>
+            <span id="copy-status-wrap" class="copy-icon-svg">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+            </span>
+        </div>
     </div>
 """, unsafe_allow_html=True)
 
+# --- 后续逻辑（输入、算法、K线等）保持原样 ---
 u_name = st.text_input("👤 您的昵称", placeholder="访客模式可留空", key="u_name_key")
 p_input = st.text_input("📱 手机号码", placeholder="输入11位待测号码", key="p_input_key")
 
@@ -144,7 +192,6 @@ if analyze_btn:
         if not is_white_list:
             st.session_state.rate_limit[p_input] = [record[0] + 1, now]
 
-        # 🚀 隐藏状态方框，直接执行演算
         scores, counts, summary, total_score = analyze_numerology(p_input)
         
         effective_name = u_name if u_name.strip() else "访客"
@@ -183,12 +230,8 @@ if analyze_btn:
                 fig.update_layout(template="plotly_dark", height=260, xaxis_rangeslider_visible=False, margin=dict(l=0,r=0,t=10,b=10), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
                 st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False, 'responsive': True})
 
-        if k_select != "全部都要 (财/事/感/家)":
-            st.info("💡 财运/事业/感情/家庭 这四项都要演算吗？请返回首页重新选择演算选项。")
-
         st.write("---")
         st.subheader("📝 大师深度解说")
-        # 🚀 优化后的加载提示
         with st.spinner("大师正在演算中，请稍后..."):
             reading = get_ai_reading(effective_name, scores, counts)
             st.markdown(reading)
