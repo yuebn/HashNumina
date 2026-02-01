@@ -8,7 +8,7 @@ import time
 import streamlit.components.v1 as components
 
 # ==========================================
-# 🔑 核心配置与安全策略
+# 🔑 核心配置
 # ==========================================
 DEEPSEEK_API_KEY = st.secrets.get("DEEPSEEK_API_KEY", "sk-899d54012ab145588d06927811ff8562")
 TEST_WHITELIST_STUB = "18923487413" 
@@ -19,32 +19,41 @@ if 'rate_limit' not in st.session_state:
 # 1. 页面配置与视觉注入
 st.set_page_config(page_title="多比 DuoBi", layout="wide")
 
+# 🎨 注入 Google 艺术字体与自定义样式
 st.markdown("""
     <style>
+    /* 引入极具奇幻感的字体 */
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Ma+Shan+Zheng&display=swap');
+
     .main { background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); color: #E0E0E0; }
     
-    /* 🚀 生动精灵 LOGO 容器 */
+    /* 🚀 艺术字 LOGO 容器 */
     .header-box {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        padding: 10px 0;
-        margin-left: 0;
+        padding: 20px 0 5px 0;
+        text-align: left;
     }
-    .brand-text {
-        font-family: 'Inter', sans-serif;
-        font-weight: 800;
-        font-size: 2.4rem;
-        color: #FFFFFF;
-        margin: 0;
-        letter-spacing: -1px;
+    .art-logo-cn {
+        font-family: 'Ma Shan+Zheng', cursive; /* 艺术书法体 */
+        font-size: 3.5rem;
+        background: linear-gradient(to bottom, #FFFFFF, #FFD700);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: -15px;
+        display: block;
+    }
+    .art-logo-en {
+        font-family: 'Cinzel Decorative', serif; /* 魔法感艺术体 */
+        font-size: 2.2rem;
+        color: #00FFC2;
+        letter-spacing: 4px;
+        text-shadow: 2px 2px 10px rgba(0, 255, 194, 0.5);
     }
     .brand-subtitle {
-        color: #FFD700;
+        color: #bbb;
         font-size: 1rem;
-        margin-bottom: 20px;
-        opacity: 0.9;
-        margin-top: -10px;
+        margin-top: 10px;
+        margin-bottom: 25px;
+        letter-spacing: 1px;
     }
 
     /* 紧凑 UI 组件 */
@@ -66,20 +75,11 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# 🚀 注入代码手绘【具象大耳精灵】LOGO
+# 🚀 呈现艺术字 LOGO
 st.markdown("""
     <div class="header-box">
-        <svg width="70" height="70" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M40 50C10 20 0 70 35 65M80 50C110 20 120 70 85 65" stroke="#D1D1D1" stroke-width="3" fill="#2A2A2A"/>
-            <path d="M40 50C40 30 80 30 80 50C80 75 60 85 40 50Z" fill="#333333" stroke="#D1D1D1" stroke-width="2"/>
-            <circle cx="50" cy="48" r="5" fill="#00FFC2" />
-            <circle cx="70" cy="48" r="5" fill="#00FFC2" />
-            <path d="M48 45C48 45 50 43 52 45M68 45C68 45 70 43 72 45" stroke="#FFFFFF" stroke-width="1"/>
-            <path d="M58 55L62 55L60 58Z" fill="#D1D1D1"/>
-            <path d="M55 65C58 68 62 68 65 65" stroke="#00FFC2" stroke-width="1.5" stroke-linecap="round"/>
-            <path d="M40 85Q60 75 80 85" stroke="#7928ca" stroke-width="3" stroke-linecap="round"/>
-        </svg>
-        <h1 class="brand-text">多比 DuoBi</h1>
+        <span class="art-logo-cn">多比</span>
+        <span class="art-logo-en">DUOBI</span>
     </div>
     <div class="brand-subtitle">周易八星磁场扫描 + DeepSeek-V3 深度解说</div>
 """, unsafe_allow_html=True)
@@ -87,11 +87,11 @@ st.markdown("""
 # 🚀 手机 K 线脚本补丁保持不动
 components.html('<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>', height=0)
 
-# --- 🛡️ 隐私声明、算法、K线及清空逻辑（均保持不动） ---
+# --- 🛡️ 隐私声明、算法、K线逻辑（严格封存） ---
 st.markdown("""
     <div class="privacy-trust-box">
         <b style="color:#000000;">🛡️ 隐私保护声明：</b><br>
-        本站免费，不设数据库，您的输入信息仅用于AI实时演算，不会被存储或转售。请放心使用。
+        本站不设数据库，您的输入信息仅用于AI实时演算，不会被存储或转售。请放心使用。
     </div>
 """, unsafe_allow_html=True)
 
@@ -99,11 +99,7 @@ u_name = st.text_input("👤 您的昵称", placeholder="访客模式可留空",
 p_input = st.text_input("📱 手机号码", placeholder="输入11位待测号码", key="p_input_key")
 
 st.markdown("**📊 选择 K 线演算维度：**")
-k_select = st.radio(
-    label="K线选项",
-    options=["财运+事业", "感情+家庭", "全部都要 (财/事/感/家)"],
-    index=0, horizontal=True, label_visibility="collapsed", key="k_select_key"
-)
+k_select = st.radio(label="K线选项", options=["财运+事业", "感情+家庭", "全部都要 (财/事/感/家)"], index=0, horizontal=True, label_visibility="collapsed", key="k_select_key")
 
 def analyze_numerology(phone):
     stars_cfg = {
@@ -208,7 +204,7 @@ if analyze_btn:
             reading = get_ai_reading(effective_name, scores, counts)
             st.markdown(reading)
         
-        share_text = f"🔮 我在 #多比DuoBi 测得 2026 综合评分：{total_score}分！"
+        share_text = f" 我在 #多比DuoBi 测得 2026 综合评分：{total_score}分！"
         st.markdown(f'<a href="https://twitter.com/intent/tweet?text={urllib.parse.quote(share_text)}" target="_blank"><button style="background-color: #1DA1F2; color: white; border: none; padding: 12px; border-radius: 25px; font-weight: bold; width: 100%; max-width: 300px;">🐦 分享到 X (Twitter)</button></a>', unsafe_allow_html=True)
         
         st.write("") 
@@ -218,4 +214,3 @@ if analyze_btn:
             st.rerun()
 
 st.markdown(f'<div class="footer"><hr>© 2026 多比 DuoBi | <a href="https://x.com/btc1349" style="color:#00FFC2;text-decoration:none;">@btc1349</a></div>', unsafe_allow_html=True)
-
