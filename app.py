@@ -19,37 +19,31 @@ if 'rate_limit' not in st.session_state:
 # 1. 页面配置与视觉注入
 st.set_page_config(page_title="多比 DuoBi", layout="wide")
 
-# 🎨 注入自定义 LOGO 与精致样式
 st.markdown("""
     <style>
     .main { background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); color: #E0E0E0; }
     
-    /* LOGO 和标题的容器 */
-    .header-container {
+    /* 🚀 极简精灵 LOGO 容器 */
+    .header-box {
         display: flex;
         align-items: center;
-        gap: 15px; /* LOGO 和文字之间的间距 */
-        margin-bottom: 5px;
-        padding-top: 10px;
+        gap: 12px;
+        padding: 20px 0 10px 0;
+        margin-left: 0;
     }
-    .main-title {
-        font-family: 'Inter', 'Helvetica Neue', sans-serif;
+    .brand-text {
+        font-family: 'Inter', sans-serif;
         font-weight: 800;
-        font-size: 2.2rem;
-        color: #FFFFFF; /* 白色 */
-        line-height: 1.1; /* 调整行高使标题更紧凑 */
+        font-size: 2.4rem;
+        color: #FFFFFF;
         margin: 0;
+        letter-spacing: -1px;
     }
-    .subtitle {
-        font-family: 'Inter', 'Helvetica Neue', sans-serif;
-        font-weight: 500;
-        font-size: 1.2rem;
-        color: #FFD700; /* 金色，与魔法棒光效呼应 */
-        margin-top: -5px; /* 向上微调，与主标题更靠近 */
-    }
-    .stImage {
-        border-radius: 15px; /* 圆角图片 */
-        overflow: hidden; /* 确保圆角生效 */
+    .brand-subtitle {
+        color: #FFD700;
+        font-size: 1rem;
+        margin-bottom: 20px;
+        opacity: 0.9;
     }
 
     /* 紧凑 UI 组件 */
@@ -71,21 +65,32 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# 🚀 手机 K 线脚本补丁（保持不动）
+# 🚀 注入代码手绘 SVG LOGO（致敬多比精灵）
+st.markdown("""
+    <div class="header-box">
+        <svg width="60" height="60" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M20 40C10 30 5 45 15 50M80 40C90 30 95 45 85 50" stroke="#E0E0E0" stroke-width="3" stroke-linecap="round"/>
+            <rect x="47" y="25" width="6" height="50" rx="3" fill="url(#grad1)" />
+            <circle cx="50" cy="20" r="8" fill="#00FFC2">
+                <animate attributeName="opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite" />
+            </circle>
+            <path d="M30 80Q50 70 70 80" stroke="#7928ca" stroke-width="2" fill="none" />
+            <defs>
+                <linearGradient id="grad1" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#00FFC2;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#7928ca;stop-opacity:1" />
+                </linearGradient>
+            </defs>
+        </svg>
+        <h1 class="brand-text">多比 DuoBi</h1>
+    </div>
+    <div class="brand-subtitle">周易八星磁场扫描 + DeepSeek-V3 深度解说</div>
+""", unsafe_allow_html=True)
+
+# 🚀 手机 K 线脚本补丁
 components.html('<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>', height=0)
 
-# 嵌入 LOGO 图片和品牌名称
-col1, col2 = st.columns([0.15, 0.85]) # 调整列宽比例以适应图片和文字
-
-with col1:
-    st.image("https://i.ibb.co/L9H3w99/Dobby-Logo-Final.png", width=100) # 使用CDN链接
-
-with col2:
-    st.markdown("<div class='header-container'><h1 class='main-title'>多比 DuoBi</h1></div>", unsafe_allow_html=True)
-    st.markdown("<p class='subtitle'>周易八星磁场扫描 + DeepSeek-V3 深度解说</p>", unsafe_allow_html=True)
-
-
-# 🛡️ 隐私保护声明（白底黑字保持不动）
+# --- 🛡️ 隐私声明保持原样 ---
 st.markdown("""
     <div class="privacy-trust-box">
         <b style="color:#000000;">🛡️ 隐私保护声明：</b><br>
@@ -93,8 +98,7 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# --- 核心逻辑封存（输入、算法、K线、清空机制） ---
-
+# --- 核心交互逻辑（已封存，不做改动） ---
 u_name = st.text_input("👤 您的昵称", placeholder="访客模式可留空", key="u_name_key")
 p_input = st.text_input("📱 手机号码", placeholder="输入11位待测号码", key="p_input_key")
 
@@ -105,6 +109,7 @@ k_select = st.radio(
     index=0, horizontal=True, label_visibility="collapsed", key="k_select_key"
 )
 
+# 算法部分保持一致
 def analyze_numerology(phone):
     stars_cfg = {
         "天医(财)": ["13", "31", "68", "86", "49", "94", "27", "72"],
